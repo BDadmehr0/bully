@@ -4,14 +4,16 @@
 
 ```sh
 sudo pacman -S --needed base-devel cmake ninja git sqlite catch2
-# Studio GUI
+# Studio GUI (optional)
 sudo pacman -S --needed qt6-base qt6-multimedia
-# Game runtime
-sudo pacman -S --needed sdl3 glm openal assimp freetype2
+# Windowed game host (optional; the game also runs --headless)
+sudo pacman -S --needed sdl3 mesa
 ```
 
 SQLite and Catch2 have vendored fallbacks, so the headless build needs only a
-compiler, CMake and Ninja.
+compiler, CMake and Ninja. Qt 6 and SDL3 are optional: without them the Studio
+shell and the *windowed* game host are skipped, and everything else - including
+`bully_game --headless` - still builds and is tested.
 
 ## Headless build (CI, containers, agents)
 
@@ -95,6 +97,14 @@ strict build never fails inside a vendored dependency.
 | `BULLY_ENABLE_SANITIZERS` | OFF | Address + UB sanitizers |
 | `BULLY_USE_SYSTEM_SQLITE` | ON | Prefer system SQLite over the amalgamation |
 
-When Qt 6 or SDL3 is missing, CMake disables the corresponding target with a
-`message(STATUS ...)` note rather than failing the configure step, and the
-summary banner prints exactly what was built.
+When Qt 6 is missing the Studio target is skipped; when SDL3 or OpenGL is
+missing, `bully_game` is still built but without the window (its `--headless`
+mode is unaffected). Neither case fails the configure step, and the summary
+banner prints exactly what was built:
+
+```console
+--   Qt6 studio shell  : OFF
+--   game runtime      : ON
+--   asset CLI         : ON
+--   tests             : ON
+```
