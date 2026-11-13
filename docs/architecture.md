@@ -13,7 +13,7 @@ plugins/           stable C ABI host, manifest model, importer bridge
         v
 asset_pipeline/    importers, processors, cache, packaging, QA reports
 formats/           versioned binary runtime formats + registry
-engine/runtime     scene/animation/audio runtime services (no editor deps)
+engine/runtime     asset database, story state, clock + input (headless, tested)
 engine/core        errors, diagnostics, JSON, UUIDs, filesystem, logging
 third_party/       SQLite amalgamation, Catch2 (vendored)
 ```
@@ -35,7 +35,10 @@ third_party/       SQLite amalgamation, Catch2 (vendored)
    library opens `project.db`.
 5. `plugins` depends on `pipeline` (for the importer interface) and on `dl`.
    Plugins themselves never link host C++ symbols.
-6. `studio/*` (Qt) is the only layer allowed to depend on Qt. Nothing below
+6. `engine/runtime` depends on `core` and `formats` only - never on the
+   pipeline, project database or plugins. The runtime loads compiled assets, it
+   does not build them; that is what keeps a shipped game free of SQLite.
+7. `studio/*` (Qt) is the only layer allowed to depend on Qt. Nothing below
    `studio/` may include a Qt header; this is what keeps the CLI, QA dashboard
    and tests buildable in a container without Qt.
 

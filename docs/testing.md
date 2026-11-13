@@ -17,14 +17,15 @@ The suite is five executables registered with CTest:
 | `formats` | `tests/test_formats` | the nine runtime formats: round-trip, versioning, corruption handling, validation |
 | `pipeline` | `tests/test_pipeline` | importers, cache, build graph, packaging, QA rules, presets, templates |
 | `plugins` | `tests/test_plugins` | the real plugin host: discovery, ABI check, load, import, QA, unload |
+| `runtime` | `tests/test_runtime` | asset database mounts, story state, clock and input map |
 | `headless` | `tests/test_headless` | the CLI end-to-end in a scratch project |
 
 ```console
 $ ctest --preset headless
     Start 1: core
-1/5 Test #1: core .............................   Passed    0.02 sec
+1/6 Test #1: core .............................   Passed    0.02 sec
 ...
-100% tests passed out of 5
+100% tests passed out of 6
 ```
 
 Run one suite with its filter:

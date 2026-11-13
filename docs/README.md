@@ -18,6 +18,7 @@ game runtime that consumes its compiled formats.
 | [formats/bscene.md](formats/bscene.md) | Scene / level |
 | [formats/bmission.md](formats/bmission.md) | Mission / quest graph |
 | [formats/bpackage.md](formats/bpackage.md) | Distributable asset package |
+| [runtime.md](runtime.md) | Runtime layer: asset database, story state, clock, input |
 | [plugins.md](plugins.md) | Plugin ABI, manifest, lifecycle, isolation limits |
 | [retro-presets.md](retro-presets.md) | Retro graphics toolkit presets and budgets |
 | [importers.md](importers.md) | Importer contract and the built-in catalogue |

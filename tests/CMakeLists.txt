@@ -65,6 +65,14 @@ target_compile_definitions(test_plugins PRIVATE
     BULLY_SAMPLE_PLUGIN_SOURCE_DIR="${CMAKE_SOURCE_DIR}/plugins/samples/hello_importer")
 add_test(NAME plugins COMMAND test_plugins)
 
+# --- runtime subsystems (assets, story, clock, input) ------------------------
+add_executable(test_runtime
+    runtime/test_asset_database.cpp
+    runtime/test_story.cpp
+    runtime/test_clock.cpp)
+target_link_libraries(test_runtime PRIVATE bully_test_support bully_runtime bully_formats)
+add_test(NAME runtime COMMAND test_runtime)
+
 # --- headless QA dashboard over a scaffolded project -------------------------
 add_executable(test_headless qa/test_headless.cpp)
 target_link_libraries(test_headless PRIVATE bully_test_support bully_pipeline
@@ -75,6 +83,6 @@ add_dependencies(test_headless bully_asset_cli)
 add_test(NAME headless COMMAND test_headless)
 
 # Third-party headers and test scaffolding legitimately produce unused helpers.
-foreach(target test_core test_formats test_pipeline test_plugins test_headless)
+foreach(target test_core test_formats test_pipeline test_plugins test_headless test_runtime)
     target_compile_options(${target} PRIVATE -Wno-unused-function)
 endforeach()

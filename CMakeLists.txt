@@ -94,8 +94,11 @@ if(BULLY_BUILD_CLI)
     add_subdirectory(apps/asset_cli)
 endif()
 
+# The runtime *subsystems* (assets, story, clock, input) are headless and always
+# built with the engine. Only the SDL3 executable needs a graphics stack.
+add_subdirectory(engine/runtime)
+
 if(BULLY_BUILD_RUNTIME)
-    add_subdirectory(engine/runtime)
     add_subdirectory(apps/game)
 endif()
 
