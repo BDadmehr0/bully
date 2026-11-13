@@ -1,0 +1,178 @@
+{
+  "project": "hello-retro",
+  "generated_utc": "2026-11-13T12:54:37Z",
+  "rules_run": 13,
+  "errors": 0,
+  "warnings": 5,
+  "duration_ms": 10,
+  "success": true,
+  "rules": [
+    {
+      "rule": "asset.references",
+      "description": "every declared dependency resolves to a known asset",
+      "checked": 4,
+      "passed": 4,
+      "failed": 0,
+      "warnings": 0,
+      "duration_ms": 0,
+      "findings": []
+    },
+    {
+      "rule": "asset.import",
+      "description": "rebuild each asset in dry-run mode and collect diagnostics",
+      "checked": 4,
+      "passed": 4,
+      "failed": 0,
+      "warnings": 2,
+      "duration_ms": 3,
+      "findings": [
+        {
+          "severity": "warning",
+          "code": "BULLY-DLG-0030",
+          "message": "1 voice take(s) have no audio assigned; the recording checklist will list them",
+          "asset_id": "3e65d8e8-be21-598d-9e48-dac7e52678cf",
+          "source": "content/dialogue/intro.dialogue.json"
+        },
+        {
+          "severity": "warning",
+          "code": "BULLY-DLG-0030",
+          "message": "1 voice take(s) have no audio assigned; the recording checklist will list them",
+          "asset_id": "3e65d8e8-be21-598d-9e48-dac7e52678cf",
+          "source": "content/dialogue/intro.dialogue.json"
+        }
+      ]
+    },
+    {
+      "rule": "runtime.load",
+      "description": "decode every compiled asset with the runtime decoders",
+      "checked": 4,
+      "passed": 4,
+      "failed": 0,
+      "warnings": 0,
+      "duration_ms": 1,
+      "findings": []
+    },
+    {
+      "rule": "dialogue.recordings",
+      "description": "every dialogue line has a selected voice take",
+      "checked": 1,
+      "passed": 0,
+      "failed": 1,
+      "warnings": 3,
+      "duration_ms": 0,
+      "findings": [
+        {
+          "severity": "warning",
+          "code": "BULLY-QA-0020",
+          "message": "line 'dlg.intro.gary.001' has no voice recording",
+          "asset_id": "3e65d8e8-be21-598d-9e48-dac7e52678cf",
+          "source": "content/dialogue/intro.dialogue.json"
+        },
+        {
+          "severity": "warning",
+          "code": "BULLY-QA-0020",
+          "message": "line 'dlg.intro.jimmy.001' has no voice recording",
+          "asset_id": "3e65d8e8-be21-598d-9e48-dac7e52678cf",
+          "source": "content/dialogue/intro.dialogue.json"
+        },
+        {
+          "severity": "warning",
+          "code": "BULLY-QA-0020",
+          "message": "line 'dlg.intro.jimmy.002' has no voice recording",
+          "asset_id": "3e65d8e8-be21-598d-9e48-dac7e52678cf",
+          "source": "content/dialogue/intro.dialogue.json"
+        }
+      ]
+    },
+    {
+      "rule": "mission.dependencies",
+      "description": "mission dependency graph is acyclic",
+      "checked": 1,
+      "passed": 1,
+      "failed": 0,
+      "warnings": 0,
+      "duration_ms": 0,
+      "findings": []
+    },
+    {
+      "rule": "asset.orphans",
+      "description": "source files that no other asset references",
+      "checked": 1,
+      "passed": 1,
+      "failed": 0,
+      "warnings": 0,
+      "duration_ms": 0,
+      "findings": []
+    },
+    {
+      "rule": "asset.outputs",
+      "description": "every asset has a compiled output that is up to date",
+      "checked": 4,
+      "passed": 4,
+      "failed": 0,
+      "warnings": 0,
+      "duration_ms": 0,
+      "findings": []
+    },
+    {
+      "rule": "dialogue.subtitles",
+      "description": "subtitle timing matches the recorded audio",
+      "checked": 1,
+      "passed": 1,
+      "failed": 0,
+      "warnings": 0,
+      "duration_ms": 0,
+      "findings": []
+    },
+    {
+      "rule": "dialogue.graph",
+      "description": "dialogue graphs are valid and terminate",
+      "checked": 1,
+      "passed": 1,
+      "failed": 0,
+      "warnings": 0,
+      "duration_ms": 0,
+      "findings": []
+    },
+    {
+      "rule": "animation.references",
+      "description": "animations reference bones from the models they target",
+      "checked": 0,
+      "passed": 0,
+      "failed": 0,
+      "warnings": 0,
+      "duration_ms": 0,
+      "findings": []
+    },
+    {
+      "rule": "scene.references",
+      "description": "models and missions referenced by scenes exist",
+      "checked": 1,
+      "passed": 1,
+      "failed": 0,
+      "warnings": 0,
+      "duration_ms": 0,
+      "findings": []
+    },
+    {
+      "rule": "plugin.compatibility",
+      "description": "plugin manifests declare an ABI version this build can load",
+      "checked": 0,
+      "passed": 0,
+      "failed": 0,
+      "warnings": 0,
+      "duration_ms": 0,
+      "findings": []
+    },
+    {
+      "rule": "package.integrity",
+      "description": "existing .bpackage files verify",
+      "checked": 0,
+      "passed": 0,
+      "failed": 0,
+      "warnings": 0,
+      "duration_ms": 0,
+      "findings": []
+    }
+  ]
+}

@@ -8,6 +8,7 @@
 //   asset.import         every asset imports without errors
 //   asset.references     dependency targets exist and are buildable
 //   asset.orphans        source files referenced by nothing (informational)
+//   asset.outputs        every asset has a compiled output that is up to date
 //   dialogue.recordings  every dialogue line has a selected voice take
 //   dialogue.subtitles   subtitle timing matches audio timing
 //   dialogue.graph       branches resolve, no dead ends without an exit
@@ -17,6 +18,10 @@
 //   plugin.compatibility plugins declare a compatible API version
 //   runtime.load         every compiled asset can be decoded by the runtime
 //   package.integrity    existing packages pass their CRC verification
+//
+// Codes are namespaced per rule family (BULLY-QA-00xx) and reference the
+// pipeline/format codes they aggregate, so a report can be traced back to the
+// diagnostic that produced it.
 #pragma once
 
 #include <cstdint>

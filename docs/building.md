@@ -40,7 +40,8 @@ cmake --preset asan             # sanitizer build
 
 ## Make targets
 
-`make` (or `make help`) lists every target:
+`make` (or `make help`) lists every target. The Makefile is a thin wrapper over
+CMake - there is one source of truth for the build:
 
 | Target | Effect |
 |---|---|
@@ -54,6 +55,33 @@ cmake --preset asan             # sanitizer build
 | `package` | build a `.bpackage` from the example project |
 | `clean` | remove `build/` |
 | `docs` | print the documentation index |
+
+Variables: `BUILD_DIR` (default `build`), `BUILD_TYPE` (default `Debug`),
+`JOBS` (default `nproc`), `EXAMPLE` (default `examples/hello-retro`).
+
+`test-all` runs `scripts/qa_examples.sh`, which builds, QAs and packages every
+committed example project - a content regression fails just like a code one.
+
+## Presets in detail
+
+| Preset | Binary dir | Studio | Runtime | Tests | Notes |
+|---|---|---|---|---|---|
+| `debug` | `build/` | ON | ON | ON | default local build |
+| `headless` | `build/headless/` | OFF | OFF | ON | `-Werror` on, for CI |
+| `release` | `build/release/` | ON | ON | ON | optimised |
+| `asan` | `build/asan/` | OFF | OFF | ON | ASan + UBSan |
+
+```sh
+cmake --preset headless
+cmake --build --preset headless
+ctest --preset headless
+```
+
+The `headless` preset sets `BULLY_WARNINGS_AS_ERRORS=ON`, so the tree must build
+clean with the full warning set (`-Wconversion`, `-Wsign-conversion`, `-Wshadow`,
+`-Wold-style-cast`, `-Wnon-virtual-dtor`, ...). Third-party code (SQLite, Catch2)
+is compiled with warnings disabled and its headers included as `SYSTEM`, so a
+strict build never fails inside a vendored dependency.
 
 ## Options
 

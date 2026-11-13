@@ -2,3 +2,13 @@ build/
 .cache/
 *.user
 compile_commands.json
+
+# Per-project build products, caches and databases are generated, never
+# committed (examples/ and templates/ ship sources only).
+project.db
+.bully-cache/
+built/
+packages/*.bpackage
+packages/*.manifest.json
+reports/*.md
+reports/*.json

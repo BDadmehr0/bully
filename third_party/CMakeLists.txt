@@ -41,6 +41,30 @@ if(BULLY_BUILD_TESTS)
         set(CATCH_INSTALL_EXTRAS OFF CACHE BOOL "" FORCE)
         set(CATCH_BUILD_TESTING OFF CACHE BOOL "" FORCE)
         add_subdirectory(catch2 ${CMAKE_BINARY_DIR}/third_party/catch2 EXCLUDE_FROM_ALL)
+        # Vendored test framework: project warning flags (and -Werror, in the
+        # `headless` preset) must not apply to third-party code we do not patch.
+        if(NOT MSVC)
+            foreach(_catch_target Catch2 Catch2WithMain)
+                if(TARGET ${_catch_target})
+                    target_compile_options(${_catch_target} PRIVATE -w)
+                endif()
+            endforeach()
+        endif()
         message(STATUS "  catch2            : bundled ${CATCH2_VERSION}")
     endif()
+endif()
+
+# Catch2 is a third-party dependency: treat its headers as SYSTEM so the
+# project's strict warning set (and -Werror in the `headless` preset) never
+# fires inside the framework.
+if(BULLY_BUILD_TESTS)
+    foreach(_catch_target Catch2 Catch2WithMain)
+        if(TARGET ${_catch_target})
+            get_target_property(_catch_includes ${_catch_target} INTERFACE_INCLUDE_DIRECTORIES)
+            if(_catch_includes)
+                set_target_properties(${_catch_target} PROPERTIES
+                    INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_catch_includes}")
+            endif()
+        endif()
+    endforeach()
 endif()

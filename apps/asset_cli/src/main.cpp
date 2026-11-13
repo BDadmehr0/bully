@@ -199,7 +199,6 @@ int command_import(const Arguments& arguments)
             return 1;
         }
         const auto relative = bully::core::FileSystem::relative_to(path, session.layout->root());
-        session.layout->source_dir();
         // Copy/link into assets/ when the file lives outside the project.
         std::string final_relative = relative;
         if (!bully::core::FileSystem::is_within(path, session.layout->source_dir()) &&
@@ -325,7 +324,7 @@ int command_info(const Arguments& arguments)
         return 1;
     }
     bully::core::Version version;
-    bully::formats::sniff_version(bytes.value(), version);
+    (void)bully::formats::sniff_version(bytes.value(), version);
     std::cout << bully::formats::format_by_magic(format->magic)->description << " ("
               << format->extension << " v" << version.major << "." << version.minor << ")\n";
     if (format->magic == bully::formats::kModelFormat.magic) {
@@ -465,7 +464,7 @@ int command_verify(const Arguments& arguments)
         }
     } else {
         bully::core::Version version;
-        bully::formats::sniff_version(bytes.value(), version);
+        (void)bully::formats::sniff_version(bytes.value(), version);
         std::cout << "decoded header for " << format->extension << " v" << version.major << "."
                   << version.minor << " (no deep validator for this format yet)\n";
     }

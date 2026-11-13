@@ -198,7 +198,9 @@ TEST_CASE("A stranded building status is retried, not skipped", "[pipeline][incr
     test::ProjectFixture fixture("stranded-project");
     const std::string source = fixture.write_asset("models/b.obj", test::cube_obj());
     REQUIRE(fixture.pipeline().scan().discovered.size() == 1);
-    fixture.registry().set_status(fixture.record_for(source)->asset_id, BuildStatus::Building);
+    REQUIRE(fixture.registry()
+                .set_status(fixture.record_for(source)->asset_id, BuildStatus::Building)
+                .has_value());
     CHECK(fixture.registry().statistics().pending == 1);
     CHECK(fixture.pipeline().pending_assets().size() == 1);
     const auto report = fixture.pipeline().build_all(BuildOptions{});

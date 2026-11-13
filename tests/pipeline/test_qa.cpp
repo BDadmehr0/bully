@@ -119,7 +119,7 @@ TEST_CASE("QA detects missing source files", "[pipeline][qa]")
     const std::string source = qa.fixture.write_asset("models/a.obj", test::cube_obj());
     REQUIRE(qa.fixture.pipeline().scan().discovered.size() == 1);
     REQUIRE(core::FileSystem::remove_file(qa.fixture.layout().root() / source).has_value());
-    qa.runner->run();
+    (void)qa.runner->run();
     const auto missing = qa.fixture.registry().missing_source_files(qa.fixture.layout().root().string());
     CHECK(missing.size() == 1);
 }

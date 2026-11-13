@@ -37,18 +37,6 @@ std::string resolve_asset_reference(const ImportContext& context, const std::str
     return resolved.empty() ? reference : resolved;
 }
 
-/// Splits an authored list that may contain either ids or paths.
-std::vector<std::string> resolve_asset_references(const ImportContext& context,
-                                                  const std::vector<std::string>& references)
-{
-    std::vector<std::string> resolved;
-    resolved.reserve(references.size());
-    for (const auto& reference : references) {
-        if (reference.empty()) continue;
-        resolved.push_back(resolve_asset_reference(context, reference));
-    }
-    return resolved;
-}
 
 core::Result<core::json::Value> load_json(const ImportContext& context)
 {
