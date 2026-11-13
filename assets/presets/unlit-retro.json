@@ -1,0 +1,42 @@
+{
+  "name": "unlit-retro",
+  "display_name": "Unlit retro (pixel-art safe)",
+  "description": "Vertex-coloured, nearest-neighbour filtered, no mipmaps: for deliberately flat, chunky looks and 2D-style 3D art.",
+  "version": "1.0.0",
+  "model": {
+    "triangle_budget_per_character": 0,
+    "triangle_budget_per_scene": 0,
+    "max_bones_per_mesh": 16,
+    "generate_lods": false,
+    "lod_count": 1,
+    "lod_triangle_ratios": [1.0],
+    "bake_vertex_lighting": false,
+    "weld_vertices": false
+  },
+  "texture": {
+    "max_size": 128,
+    "pixel_format": "rgba8",
+    "generate_mips": false,
+    "sampler": "nearest",
+    "wrap": "clamp",
+    "atlas_max_size": 256
+  },
+  "material": {
+    "shader_preset": "retro.unlit",
+    "alpha_cutoff": 0.5,
+    "allow_per_pixel_lighting": false
+  },
+  "audio": {
+    "sample_rate": 22050,
+    "channels": 1,
+    "codec": "pcm8",
+    "max_voices": 16
+  },
+  "render": {
+    "resolution": [320, 240],
+    "progressive": true,
+    "colour_depth": 16,
+    "dither": true,
+    "fog": false
+  }
+}

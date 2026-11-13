@@ -1,0 +1,112 @@
+# =============================================================================
+#  Bully Studio - Modular C++ Game Development Platform
+#  Target platform: Arch Linux / Omarchy (GCC or Clang, C++20, Ninja)
+#
+#  Every layer below is a separate CMake target with an explicit public
+#  interface, so modules can be built, tested, embedded or replaced
+#  independently:
+#
+#    bully::core           - errors, ids, json, fs, logging, hashing, time
+#    bully::formats        - versioned binary resource formats (.bmodel, ...)
+#    bully::pipeline       - asset import/convert/validate/cache/package
+#    bully::plugins        - versioned C-ABI plugin host
+#    bully::studio_core    - project metadata (SQLite), documents, editors
+#    bully::runtime        - SDL3/OpenGL game runtime (optional)
+#    bully_studio          - Qt 6 desktop shell (optional)
+#    bully_game            - playable runtime executable (optional)
+#    bully_asset_cli       - headless pipeline/QA tool (always buildable)
+# =============================================================================
+cmake_minimum_required(VERSION 3.24)
+
+project(BullyStudio
+    VERSION 0.1.0
+    DESCRIPTION "Modular C++ game development platform"
+    LANGUAGES C CXX)
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+include(GNUInstallDirs)
+include(BullyHelpers)
+
+# ----------------------------------------------------------------- options ---
+option(BULLY_BUILD_STUDIO      "Build the Qt 6 desktop application" ON)
+option(BULLY_BUILD_RUNTIME     "Build the SDL3/OpenGL game runtime and game" ON)
+option(BULLY_BUILD_TESTS       "Build unit/integration tests" ON)
+option(BULLY_BUILD_CLI         "Build the headless asset/pipeline CLI" ON)
+option(BULLY_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" OFF)
+option(BULLY_ENABLE_SANITIZERS "Enable ASan/UBSan in debug builds" OFF)
+
+# Global language settings.
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type" FORCE)
+endif()
+
+bully_setup_warnings()
+
+# ------------------------------------------------------------ third party ---
+# Qt 6 is only required by the studio shell; everything else stays headless.
+if(BULLY_BUILD_STUDIO)
+    find_package(Qt6 6.4 COMPONENTS Core Gui Widgets OpenGLWidgets Sql Concurrent QUIET)
+    if(NOT Qt6_FOUND)
+        message(WARNING
+            "Qt6 >= 6.4 not found - the Bully Studio desktop shell will NOT be built.\n"
+            "Install it on Arch Linux:  sudo pacman -S qt6-base qt6-tools\n"
+            "All headless targets (pipeline, formats, runtime, CLI, tests) still build.")
+        set(BULLY_BUILD_STUDIO OFF)
+    else()
+        set(CMAKE_AUTOMOC ON)
+        set(CMAKE_AUTOUIC ON)
+        set(CMAKE_AUTORCC ON)
+    endif()
+endif()
+
+if(BULLY_BUILD_RUNTIME)
+    find_package(PkgConfig QUIET)
+    if(PkgConfig_FOUND)
+        pkg_check_modules(SDL3 QUIET IMPORTED_TARGET sdl3)
+    endif()
+    find_package(OpenGL QUIET)
+    if(NOT SDL3_FOUND OR NOT OPENGL_FOUND)
+        message(WARNING
+            "SDL3 or OpenGL not found - the game runtime and game executable will NOT be built.\n"
+            "Install on Arch Linux:  sudo pacman -S sdl3 mesa\n"
+            "The runtime is still fully unit-tested through its headless subsystems.")
+        set(BULLY_BUILD_RUNTIME OFF)
+    endif()
+endif()
+
+# ----------------------------------------------------------------- layers ---
+add_subdirectory(third_party)
+add_subdirectory(engine)
+add_subdirectory(formats)
+add_subdirectory(asset_pipeline)
+add_subdirectory(plugins)
+add_subdirectory(studio)
+add_subdirectory(templates)
+
+if(BULLY_BUILD_CLI)
+    add_subdirectory(apps/asset_cli)
+endif()
+
+if(BULLY_BUILD_RUNTIME)
+    add_subdirectory(engine/runtime)
+    add_subdirectory(apps/game)
+endif()
+
+if(BULLY_BUILD_STUDIO)
+    add_subdirectory(apps/studio)
+endif()
+
+if(BULLY_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+
+# ------------------------------------------------------------- summary ------
+bully_print_configuration()

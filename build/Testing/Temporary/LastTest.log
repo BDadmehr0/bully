@@ -1,0 +1,98 @@
+Start testing: Nov 13 12:50 UTC
+----------------------------------------------------------
+1/5 Testing: core
+1/5 Test: core
+Command: "/home/user/bully/build/tests/test_core"
+Directory: /home/user/bully/build/tests
+"core" start time: Nov 13 12:50 UTC
+Output:
+----------------------------------------------------------
+Randomness seeded to: 1736693620
+===============================================================================
+All tests passed (116 assertions in 27 test cases)
+
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"core" end time: Nov 13 12:50 UTC
+"core" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/5 Testing: formats
+2/5 Test: formats
+Command: "/home/user/bully/build/tests/test_formats"
+Directory: /home/user/bully/build/tests
+"formats" start time: Nov 13 12:50 UTC
+Output:
+----------------------------------------------------------
+Randomness seeded to: 637228825
+===============================================================================
+All tests passed (277 assertions in 51 test cases)
+
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"formats" end time: Nov 13 12:50 UTC
+"formats" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/5 Testing: pipeline
+3/5 Test: pipeline
+Command: "/home/user/bully/build/tests/test_pipeline"
+Directory: /home/user/bully/build/tests
+"pipeline" start time: Nov 13 12:50 UTC
+Output:
+----------------------------------------------------------
+Randomness seeded to: 1727576208
+===============================================================================
+All tests passed (822 assertions in 76 test cases)
+
+<end of output>
+Test time =   0.28 sec
+----------------------------------------------------------
+Test Passed.
+"pipeline" end time: Nov 13 12:50 UTC
+"pipeline" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/5 Testing: plugins
+4/5 Test: plugins
+Command: "/home/user/bully/build/tests/test_plugins"
+Directory: /home/user/bully/build/tests
+"plugins" start time: Nov 13 12:50 UTC
+Output:
+----------------------------------------------------------
+Randomness seeded to: 2318944871
+===============================================================================
+All tests passed (70 assertions in 11 test cases)
+
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"plugins" end time: Nov 13 12:50 UTC
+"plugins" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/5 Testing: headless
+5/5 Test: headless
+Command: "/home/user/bully/build/tests/test_headless"
+Directory: /home/user/bully/build/tests
+"headless" start time: Nov 13 12:50 UTC
+Output:
+----------------------------------------------------------
+Randomness seeded to: 3286806025
+===============================================================================
+All tests passed (71 assertions in 5 test cases)
+
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"headless" end time: Nov 13 12:50 UTC
+"headless" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Nov 13 12:50 UTC

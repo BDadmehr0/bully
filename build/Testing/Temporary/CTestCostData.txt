@@ -1,0 +1,6 @@
+core 2 0.0124381
+formats 2 0.00265964
+pipeline 2 0.140547
+plugins 2 0.00532027
+headless 2 0.05916
+---
