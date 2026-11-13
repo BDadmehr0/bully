@@ -28,6 +28,7 @@
 #include "bully/pipeline/packager.h"
 #include "bully/pipeline/pipeline.h"
 #include "bully/pipeline/project_layout.h"
+#include "bully/exporters/exporters.h"
 #include "bully/pipeline/qa.h"
 #include "bully/plugins/host.h"
 #include "bully/project/asset_registry.h"
@@ -76,6 +77,10 @@ void print_usage()
         "        Print the compiled asset summary as JSON.\n"
         "  verify <file>\n"
         "        Decode and validate a compiled .b* file.\n"
+        "  export <file.b*> <out> [--project DIR]\n"
+        "        Export a compiled asset to PNG/PPM/WAV/OBJ or source JSON.\n"
+        "  exporters\n"
+        "        List the available exporters.\n"
         "  qa [--rule NAME] [--project DIR]\n"
         "        Run the QA dashboard and write reports/qa-report.{json,md}.\n"
         "  package [--name NAME] [--project DIR]\n"
@@ -473,6 +478,50 @@ int command_verify(const Arguments& arguments)
     return ok ? 0 : 1;
 }
 
+int command_exporters()
+{
+    std::cout << "Exporters (" << bully::exporters::exporters().size() << "):\n";
+    for (const auto& info : bully::exporters::exporters()) {
+        std::cout << "  " << info.id << "  [" << info.extension << "]  "
+                  << info.display_name << "  <- " << info.asset_kind << "\n";
+    }
+    return 0;
+}
+
+int command_export(const Arguments& arguments)
+{
+    if (arguments.positional.size() < 2) {
+        std::cerr << "error: 'export' requires <compiled-asset> <destination>\n";
+        return 2;
+    }
+    const auto source = std::filesystem::path(arguments.positional[0]);
+    const auto destination = std::filesystem::path(arguments.positional[1]);
+    if (!bully::core::FileSystem::exists(source)) {
+        std::cerr << "error: file not found: " << source.string() << "\n";
+        return 1;
+    }
+    // A relative destination is resolved inside the project when one is open, so
+    // `export built/x.bmodel out/x.obj` behaves the way people expect.
+    std::filesystem::path target = destination;
+    if (destination.is_relative()) {
+        const auto project_root = std::filesystem::path(arguments.option("project", "."));
+        if (bully::core::FileSystem::exists(project_root / "project.bullyproj")) {
+            target = project_root / destination;
+        }
+    }
+    if (!target.parent_path().empty()) {
+        (void)bully::core::FileSystem::create_directories(target.parent_path());
+    }
+    auto status = bully::exporters::export_file(source, target);
+    if (!status) {
+        std::cerr << status.diagnostics().format();
+        return 1;
+    }
+    if (!status.diagnostics().empty()) std::cerr << status.diagnostics().format();
+    std::cout << "Exported " << source.string() << " -> " << target.string() << "\n";
+    return 0;
+}
+
 int command_qa(const Arguments& arguments)
 {
     Session session;
@@ -600,6 +649,8 @@ int main(int argc, char** argv)
     if (command == "build") return command_build(arguments);
     if (command == "info") return command_info(arguments);
     if (command == "verify") return command_verify(arguments);
+    if (command == "export") return command_export(arguments);
+    if (command == "exporters") return command_exporters();
     if (command == "qa") return command_qa(arguments);
     if (command == "package") return command_package(arguments);
     if (command == "plugins") return command_plugins(arguments);

@@ -4,6 +4,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <array>
+#include <utility>
 #include <cstdio>
 #include <string>
 
@@ -135,6 +136,48 @@ TEST_CASE("CLI verifies corrupted assets as invalid", "[headless]")
     INFO(verified.output);
     CHECK(verified.exit_code != 0);
     CHECK(verified.output.find("INVALID") != std::string::npos);
+}
+
+TEST_CASE("CLI exports compiled assets back to editable source files", "[headless]")
+{
+    test::TempDir dir;
+    const auto project = dir / "exports";
+    REQUIRE(run("new \"" + project.string() + "\"", dir.path()).exit_code == 0);
+    REQUIRE(run("build", project).exit_code == 0);
+
+    const auto listed = run("exporters", project);
+    INFO(listed.output);
+    CHECK(listed.exit_code == 0);
+    for (const char* extension : {".png", ".wav", ".obj", ".scene.json", ".mission.json",
+                                  ".dialogue.json", ".banim.json", ".bmaterial.json"}) {
+        CHECK(listed.output.find(extension) != std::string::npos);
+    }
+
+    // Relative destinations resolve inside the project root.
+    for (const auto& [source, destination] :
+         std::array<std::pair<const char*, const char*>, 4>{{
+             {"built/models/crate.bmodel", "exported/crate.obj"},
+             {"built/scenes/schoolyard.scene.bscene", "exported/schoolyard.scene.json"},
+             {"built/missions/m_first_day.mission.bmission",
+              "exported/m_first_day.mission.json"},
+             {"built/dialogue/intro.dialogue.bdialogue",
+              "exported/intro.dialogue.json"}}}) {
+        const auto result = run(std::string("export ") + source + " " + destination, project);
+        INFO(source << ": " << result.output);
+        CHECK(result.exit_code == 0);
+        CHECK(std::filesystem::exists(project / destination));
+        CHECK(std::filesystem::file_size(project / destination) > 0);
+    }
+
+    // The exported source JSON must itself be re-importable, which is the whole
+    // point of a lossless-ish round trip back into the authoring formats.
+    const auto reimported = run("import exported/schoolyard.scene.json", project);
+    INFO(reimported.output);
+    CHECK(reimported.exit_code == 0);
+
+    const auto missing = run("export built/models/nope.bmodel exported/nope.obj", project);
+    INFO(missing.output);
+    CHECK(missing.exit_code == 1);
 }
 
 TEST_CASE("Compiled template assets decode with the public format API", "[headless]")

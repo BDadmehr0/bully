@@ -116,6 +116,28 @@ A corrupt file prints the diagnostics (`BULLY-BIN-*`, `BULLY-MODEL-*`, ...) and
 exits `1`. This is the command to use when a build looks fine but the runtime
 rejects an asset.
 
+### `export <file.b*> <destination> [--project DIR]`
+
+Exports a compiled asset back out to an editable/external file. The exporter is
+chosen from the destination extension (`.png`, `.ppm`, `.wav`, `.obj`,
+`.scene.json`, `.mission.json`, `.dialogue.json`, `.banim.json`,
+`.bmaterial.json`). Writes are atomic (temp file + rename), so a failed export
+never leaves a truncated file behind.
+
+```console
+$ bully_asset_cli export built/models/crate.bmodel exported/crate.obj
+Exported built/models/crate.bmodel -> exported/crate.obj
+```
+
+A relative destination resolves inside the project root. The `obj` exporter also
+writes the companion `.mtl`. See [exporters.md](exporters.md) for the catalogue
+and the `BULLY-EXP-*` diagnostics.
+
+### `exporters`
+
+Lists the nine registered exporters with their id, extension, display name and
+the asset kind they accept.
+
 ### `qa [--rule NAME]`
 
 Runs the QA dashboard: 13 built-in rules covering references, imports, runtime

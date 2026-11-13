@@ -18,6 +18,7 @@ The suite is five executables registered with CTest:
 | `pipeline` | `tests/test_pipeline` | importers, cache, build graph, packaging, QA rules, presets, templates |
 | `plugins` | `tests/test_plugins` | the real plugin host: discovery, ABI check, load, import, QA, unload |
 | `runtime` | `tests/test_runtime` | asset database mounts, story state, clock and input map |
+| `exporters` | `tests/test_exporters` | compiled asset → PNG/WAV/OBJ/JSON export and round-trip re-import |
 | `headless` | `tests/test_headless` | the CLI end-to-end in a scratch project |
 
 ```console

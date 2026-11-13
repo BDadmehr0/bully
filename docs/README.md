@@ -22,6 +22,7 @@ game runtime that consumes its compiled formats.
 | [plugins.md](plugins.md) | Plugin ABI, manifest, lifecycle, isolation limits |
 | [retro-presets.md](retro-presets.md) | Retro graphics toolkit presets and budgets |
 | [importers.md](importers.md) | Importer contract and the built-in catalogue |
+| [exporters.md](exporters.md) | Exporter catalogue: compiled assets back to PNG/WAV/OBJ/JSON |
 | [cli.md](cli.md) | `bully_asset_cli` reference |
 | [testing.md](testing.md) | Test layout, ctest, CI usage |
 

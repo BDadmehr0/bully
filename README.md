@@ -52,6 +52,7 @@ Or with the Makefile: `make`, `make test`, `make test-all`, `make run`.
 | Cache & build | Content-hash import cache, SQLite asset registry, dependency-ordered incremental builds, cross-asset reference resolution |
 | QA | 13 dashboard rules: imports, references, runtime decoding, dialogue recordings and subtitles, mission graphs, orphans, stale outputs, plugin compatibility, package integrity |
 | Package | Deterministic `.bpackage` with per-entry CRC plus a JSON manifest for CI diffing |
+| Export | Compiled assets back out to PNG/PPM/WAV/OBJ+MTL and re-importable authoring JSON, with atomic writes |
 | Runtime | Ordered asset mounts (directory or package), story flags/missions/dialogue with save-load, fixed-step clock, rebindable input map |
 | Extend | Stable C99 plugin ABI: importers, exporters, QA rules, editor panels, templates, runtime systems |
 
@@ -77,6 +78,7 @@ Start at [docs/README.md](docs/README.md):
 * [docs/building.md](docs/building.md) - dependencies, presets, make targets
 * [docs/formats/README.md](docs/formats/README.md) - format index and container header
 * [docs/importers.md](docs/importers.md) - importer catalogue and contract
+* [docs/exporters.md](docs/exporters.md) - exporter catalogue and round-trip guarantees
 * [docs/retro-presets.md](docs/retro-presets.md) - budgets and preset schema
 * [docs/runtime.md](docs/runtime.md) - runtime session, story state, clock, input
 * [docs/plugins.md](docs/plugins.md) - plugin ABI and lifecycle
@@ -91,8 +93,9 @@ Start at [docs/README.md](docs/README.md):
 | plugin host + sample plugin | complete, tested |
 | CLI + templates + example project | complete, tested end to end |
 | runtime (assets, story, clock, input, session) | complete, tested |
+| exporters (texture, audio, model, JSON) | complete, tested |
 | `apps/game` | builds headless today; windowed with SDL3 installed |
 | `apps/studio` (Qt 6 shell, panels, extension manager) | not built in this environment (no Qt 6) |
 
-Test suite: `core`, `formats`, `pipeline`, `plugins`, `runtime`, `headless` -
+Test suite: `core`, `formats`, `pipeline`, `plugins`, `exporters`, `runtime`, `headless` -
 all green under the `headless` preset (which also builds with `-Werror`).
