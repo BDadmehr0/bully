@@ -66,18 +66,25 @@ if(BULLY_BUILD_STUDIO)
     endif()
 endif()
 
+# SDL3/OpenGL are optional: they only enable the *windowed* game host. The
+# headless runtime subsystems and the game executable's --headless mode do not
+# need a graphics stack, so the build never fails for a missing display library.
+set(BULLY_HAVE_SDL3 OFF)
 if(BULLY_BUILD_RUNTIME)
     find_package(PkgConfig QUIET)
     if(PkgConfig_FOUND)
         pkg_check_modules(SDL3 QUIET IMPORTED_TARGET sdl3)
+        if(SDL3_FOUND AND NOT TARGET SDL3::SDL3)
+            add_library(SDL3::SDL3 ALIAS PkgConfig::SDL3)
+        endif()
     endif()
     find_package(OpenGL QUIET)
-    if(NOT SDL3_FOUND OR NOT OPENGL_FOUND)
-        message(WARNING
-            "SDL3 or OpenGL not found - the game runtime and game executable will NOT be built.\n"
-            "Install on Arch Linux:  sudo pacman -S sdl3 mesa\n"
-            "The runtime is still fully unit-tested through its headless subsystems.")
-        set(BULLY_BUILD_RUNTIME OFF)
+    if(SDL3_FOUND AND OPENGL_FOUND)
+        set(BULLY_HAVE_SDL3 ON)
+    else()
+        message(STATUS
+            "SDL3 or OpenGL not found - bully_game builds headless-only.\n"
+            "Install on Arch Linux:  sudo pacman -S sdl3 mesa")
     endif()
 endif()
 

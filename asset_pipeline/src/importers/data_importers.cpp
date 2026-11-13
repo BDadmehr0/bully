@@ -326,7 +326,19 @@ public:
                 trigger.kind = entry.get_string("kind", "mission");
                 trigger.once = entry.get_bool("once", false);
                 if (const core::json::Value* data = entry.find("payload")) {
-                    trigger.payload_json = data->dump(0);
+                    core::json::Value payload = *data;
+                    // Mission/cutscene payloads name the target mission the way
+                    // an author types it; translate to the asset id and record
+                    // the dependency so the mission is built before the scene.
+                    for (const char* key : {"mission", "scene", "dialogue"}) {
+                        const std::string raw = payload.get_string(key);
+                        if (raw.empty()) continue;
+                        const std::string resolved = resolve_asset_reference(context, raw);
+                        payload[key] = resolved;
+                        dependencies.push_back(
+                            AssetDependency{resolved, false, std::string("trigger ") + key});
+                    }
+                    trigger.payload_json = payload.dump(0);
                 }
                 document.triggers.push_back(std::move(trigger));
             }

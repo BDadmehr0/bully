@@ -69,7 +69,8 @@ add_test(NAME plugins COMMAND test_plugins)
 add_executable(test_runtime
     runtime/test_asset_database.cpp
     runtime/test_story.cpp
-    runtime/test_clock.cpp)
+    runtime/test_clock.cpp
+    runtime/test_session.cpp)
 target_link_libraries(test_runtime PRIVATE bully_test_support bully_runtime bully_formats)
 add_test(NAME runtime COMMAND test_runtime)
 

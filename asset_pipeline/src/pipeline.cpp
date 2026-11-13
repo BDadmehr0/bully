@@ -374,17 +374,33 @@ AssetBuildResult Pipeline::build_asset(std::string_view asset_id, const BuildOpt
         if (auto by_path = registry_.find_by_source_path(normalized); by_path.has_value()) {
             return by_path->asset_id;
         }
-        // 3. or a loose reference ("crate", "crate.obj") matched against the
-        //    source stem - this is what authors type in the scene editor.
-        const std::string stem = std::filesystem::path(normalized).stem().string();
-        const std::string lowered = core::to_lower(stem);
+        // 3. or a loose reference ("crate", "crate.obj", "m_first_day") matched
+        //    against the source name - this is what authors type in the scene
+        //    editor. Compound sources ("intro.dialogue.json") are compared both
+        //    with and without their extra extension.
+        auto stems_of = [](const std::string& path) {
+            const std::filesystem::path file(path);
+            std::string bare = file.filename().string();
+            std::vector<std::string> stems;
+            stems.push_back(core::to_lower(bare));
+            while (true) {
+                const std::filesystem::path current(bare);
+                if (!current.has_extension()) break;
+                bare = current.stem().string();
+                stems.push_back(core::to_lower(bare));
+            }
+            return stems;
+        };
+        const auto wanted = stems_of(normalized);
+        const std::string lowered = wanted.back();
         for (const auto& candidate : registry_.all()) {
             if (candidate.source_path.empty()) continue;
-            const std::string candidate_stem =
-                core::to_lower(std::filesystem::path(candidate.source_path).stem().string());
-            if (candidate_stem == lowered || core::to_lower(candidate.name) == lowered) {
-                return candidate.asset_id;
-            }
+            const auto candidate_stems = stems_of(candidate.source_path);
+            const bool matches = std::find_if(candidate_stems.begin(), candidate_stems.end(),
+                                              [&](const std::string& stem) {
+                                                  return stem == lowered;
+                                              }) != candidate_stems.end();
+            if (matches || core::to_lower(candidate.name) == lowered) return candidate.asset_id;
         }
         return reference;  // unresolved: keep the authored string so QA can report it
     };
