@@ -1,0 +1,21 @@
+{
+  "name": "First Day",
+  "description": "Get through your first day of school.",
+  "giver": "chr.gary",
+  "start_node": "n_start",
+  "repeatable": false,
+  "objectives": [
+    {"id": "obj.attend_class", "description": "Attend English class", "kind": 0,
+     "location": "trg.classroom"},
+    {"id": "obj.talk_gary", "description": "Talk to Gary in the schoolyard", "kind": 1,
+     "target": "chr.gary", "dialogue": "dlg.intro.gary.001"}
+  ],
+  "nodes": [
+    {"id": "n_start", "objective": "obj.attend_class", "edges": [{"to": "n_talk"}]},
+    {"id": "n_talk", "objective": "obj.talk_gary", "edges": [{"to": "n_end"}]},
+    {"id": "n_end"}
+  ],
+  "conditions": [
+    {"id": "cnd.class_done", "kind": 1, "key": "obj.attend_class"}
+  ]
+}

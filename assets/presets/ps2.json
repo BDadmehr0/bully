@@ -1,0 +1,42 @@
+{
+  "name": "ps2",
+  "display_name": "PlayStation 2 (2000)",
+  "description": "High fill-rate, tiny caches. Character meshes were a few thousand triangles with 128x128 to 256x256 16-bit textures and baked lighting.",
+  "version": "1.0.0",
+  "model": {
+    "triangle_budget_per_character": 3000,
+    "triangle_budget_per_scene": 120000,
+    "max_bones_per_mesh": 32,
+    "generate_lods": true,
+    "lod_count": 3,
+    "lod_triangle_ratios": [1.0, 0.5, 0.25],
+    "bake_vertex_lighting": true,
+    "weld_vertices": true
+  },
+  "texture": {
+    "max_size": 256,
+    "pixel_format": "rgba4444",
+    "generate_mips": true,
+    "sampler": "linear",
+    "wrap": "repeat",
+    "atlas_max_size": 512
+  },
+  "material": {
+    "shader_preset": "retro.lambert",
+    "alpha_cutoff": 0.5,
+    "allow_per_pixel_lighting": false
+  },
+  "audio": {
+    "sample_rate": 32000,
+    "channels": 2,
+    "codec": "adpcm",
+    "max_voices": 48
+  },
+  "render": {
+    "resolution": [640, 448],
+    "progressive": true,
+    "colour_depth": 24,
+    "dither": true,
+    "fog": true
+  }
+}

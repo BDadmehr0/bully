@@ -1,0 +1,4 @@
+Catch2 v3.5.4 - Boost Software License 1.0
+Vendored under third_party/catch2 for offline builds. The full license text is
+distributed with the vendored source (third_party/catch2/LICENSE.txt); the
+system package (Arch: `pacman -S catch2`) is preferred when available.
