@@ -13,7 +13,7 @@ dry run, a real headless run, and the usage-error paths.
 from __future__ import annotations
 
 import argparse
-import shutil
+import os
 import subprocess
 import sys
 import tempfile
@@ -157,15 +157,17 @@ def main() -> int:
         check("--diagnose" in result.stdout, "--doctor checks the binary's --diagnose support")
 
         print("stale-binary detection")
-        # Touch a source so it is newer than the binary; the launcher must say so
-        # (this exact situation produced "unknown option --diagnose" in the field).
+        # Make a source unambiguously newer than the binary. A fixed offset is
+        # not enough: the binary may have been built seconds ago, so +120s can
+        # still be older. Derive the stamp from the binary's own mtime instead.
+        # (This situation produced "unknown option --diagnose" in the field.)
         source = args.repo / "apps" / "game" / "src" / "main.cpp"
         if source.is_file():
-            import os as _os
-            import time as _time
             original = source.stat().st_mtime
+            binary_time = args.game.resolve().stat().st_mtime
+            touched = max(original, binary_time) + 3600.0
             try:
-                _os.utime(source, (original + 120, original + 120))
+                os.utime(source, (touched, touched))
                 result = launcher.run(str(project), "--headless", "--frames", "2", "--yes")
                 check(result.returncode == 0, "run still works with a stale binary")
                 check("older than" in result.stderr or "older than" in result.stdout,
@@ -173,7 +175,7 @@ def main() -> int:
                 doctor = launcher.run("--doctor")
                 check("STALE" in doctor.stdout, "--doctor flags the stale binary")
             finally:
-                _os.utime(source, (original, original))
+                os.utime(source, (original, original))
 
         print("no build tree")
         result = launcher.run(
