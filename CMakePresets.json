@@ -25,7 +25,8 @@
         "BULLY_BUILD_STUDIO": "ON",
         "BULLY_BUILD_RUNTIME": "ON",
         "BULLY_BUILD_TESTS": "ON",
-        "BULLY_BUILD_CLI": "ON"
+        "BULLY_BUILD_CLI": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },
     {
@@ -38,7 +39,8 @@
         "BULLY_BUILD_RUNTIME": "ON",
         "BULLY_BUILD_TESTS": "ON",
         "BULLY_BUILD_CLI": "ON",
-        "BULLY_WARNINGS_AS_ERRORS": "ON"
+        "BULLY_WARNINGS_AS_ERRORS": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },
     {
@@ -50,7 +52,8 @@
         "BULLY_BUILD_STUDIO": "ON",
         "BULLY_BUILD_RUNTIME": "ON",
         "BULLY_BUILD_TESTS": "ON",
-        "BULLY_BUILD_CLI": "ON"
+        "BULLY_BUILD_CLI": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },
     {
@@ -59,7 +62,8 @@
       "inherits": "headless",
       "cacheVariables": {
         "BULLY_ENABLE_SANITIZERS": "ON",
-        "BULLY_BUILD_RUNTIME": "ON"
+        "BULLY_BUILD_RUNTIME": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     }
   ],
@@ -87,6 +91,9 @@
       "configurePreset": "debug",
       "output": {
         "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
       }
     },
     {
@@ -94,6 +101,9 @@
       "configurePreset": "headless",
       "output": {
         "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
       }
     },
     {
@@ -101,6 +111,9 @@
       "configurePreset": "release",
       "output": {
         "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
       }
     },
     {
@@ -111,6 +124,9 @@
       },
       "environment": {
         "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1"
+      },
+      "execution": {
+        "noTestsAction": "error"
       }
     }
   ]

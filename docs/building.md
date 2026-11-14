@@ -55,10 +55,26 @@ cmake --build build -j"$(nproc)"
 ctest --test-dir build --output-on-failure
 ```
 
-Running the tests: use `ctest --preset <name>` from the repository root, or
-`ctest --test-dir build/headless`. A bare `ctest` run in the *source* directory
-finds no tests - the tree writes a `CTestTestfile.cmake` there that turns that
-mistake into a hard error instead of a green "no tests were found".
+Running the tests: **build first**, then use `ctest --preset <name>` from the
+repository root (or `ctest --test-dir build/headless`).
+
+```sh
+cmake --preset headless
+cmake --build --preset headless -j"$(nproc)"   # not optional
+ctest --preset headless
+```
+
+`ctest` never compiles anything. If the build step is skipped - for example
+`cmake --preset headless && build`, where `build` is not a command and `&&`
+short-circuits - ctest runs whatever binaries are already in `build/`, which may
+be from an older checkout entirely. That produces convincing, current-looking
+failures against code that no longer exists. Two guards:
+
+* configuring warns when the build tree is older than the sources,
+* a test preset that finds no tests fails instead of exiting 0.
+
+A bare `ctest` run in the *source* directory also finds nothing; the tree writes
+a `CTestTestfile.cmake` there so that mistake is a hard error too.
 
 ### Where the binaries land
 

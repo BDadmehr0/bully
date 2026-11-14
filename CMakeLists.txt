@@ -137,3 +137,47 @@ endif()
 
 # ------------------------------------------------------------- summary ------
 bully_print_configuration()
+
+# A stale build tree is a silent trap: ctest happily runs last week's binaries
+# against this week's sources, which makes an already-fixed failure look alive.
+# Warn at configure time (and in the banner) when the tree predates the sources.
+if(EXISTS "${CMAKE_BINARY_DIR}/CMakeCache.txt")
+    file(GLOB_RECURSE _bully_newest_sources CONFIGURE_DEPENDS
+        "${CMAKE_SOURCE_DIR}/engine/*.cpp" "${CMAKE_SOURCE_DIR}/engine/*.h"
+        "${CMAKE_SOURCE_DIR}/formats/*.cpp" "${CMAKE_SOURCE_DIR}/formats/*.h"
+        "${CMAKE_SOURCE_DIR}/asset_pipeline/*.cpp" "${CMAKE_SOURCE_DIR}/asset_pipeline/*.h"
+        "${CMAKE_SOURCE_DIR}/plugins/*.cpp" "${CMAKE_SOURCE_DIR}/plugins/*.h"
+        "${CMAKE_SOURCE_DIR}/exporters/*.cpp" "${CMAKE_SOURCE_DIR}/exporters/*.h"
+        "${CMAKE_SOURCE_DIR}/studio/*.cpp" "${CMAKE_SOURCE_DIR}/studio/*.h"
+        "${CMAKE_SOURCE_DIR}/apps/*.cpp" "${CMAKE_SOURCE_DIR}/apps/*.h"
+        "${CMAKE_SOURCE_DIR}/tests/*.cpp" "${CMAKE_SOURCE_DIR}/tests/*.h")
+    set(_bully_newest "")
+    set(_bully_newest_time 0)
+    foreach(_source ${_bully_newest_sources})
+        file(TIMESTAMP "${_source}" _source_time "%s")
+        if(_source_time GREATER _bully_newest_time)
+            set(_bully_newest_time ${_source_time})
+            set(_bully_newest "${_source}")
+        endif()
+    endforeach()
+    # Compare against the last *build*, not the last configure: configuring does
+    # not compile anything, and the cache timestamp would make every configure
+    # after an edit look stale even when the build already caught up.
+    set(_bully_stamp "${CMAKE_BINARY_DIR}/.bully-last-build")
+    if(EXISTS "${_bully_stamp}")
+        file(TIMESTAMP "${_bully_stamp}" _build_time "%s")
+        if(_bully_newest_time GREATER _build_time)
+            message(WARNING
+                "Sources are newer than the last build of this tree.\n"
+                "  newest source: ${_bully_newest}\n"
+                "  Run: cmake --build --preset <name>   (or `make`)\n"
+                "Running ctest now would test stale binaries.")
+        endif()
+    endif()
+
+    # Refreshed by every build, so the check above stays accurate.
+    add_custom_target(bully_build_stamp ALL
+        COMMAND ${CMAKE_COMMAND} -E touch "${_bully_stamp}"
+        COMMENT "Recording build timestamp"
+        VERBATIM)
+endif()
