@@ -104,6 +104,27 @@ Without `--headless` the SDL3 host opens a window; with it, the same fixed-step
 loop runs for a fixed number of frames and prints statistics. Both modes boot the
 same `GameSession`.
 
+### If the window never appears
+
+`--diagnose` explains it:
+
+```console
+$ bully_game --diagnose
+bully_game video diagnostics
+  build          : SDL3 present
+  SDL driver     : dummy
+  displays       : 1
+  drivers built  : offscreen dummy evdev
+  window possible: NO
+```
+
+A `dummy` or `offscreen` driver means SDL has no display server to talk to
+(plain SSH, a TTY, a container). In that state `SDL_CreateWindow` still
+succeeds - which is why the host used to print "Window open" over a window that
+could never appear. It now detects the driver before creating a window and
+exits 1 with the reason. `scripts/run_game.py` probes this with `--diagnose`
+before building, so you get the explanation instead of a silent no-op.
+
 ## What is *not* here yet
 
 **There is no 3D renderer.** The windowed host clears the window to the loaded

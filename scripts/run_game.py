@@ -199,6 +199,38 @@ def plan_build(
     return 0
 
 
+def probe_video(game: Path, ui: Ui, verbose: bool) -> tuple[bool, str]:
+    """Asks the game host whether a real window can be opened here.
+
+    The host's `--diagnose` exits 0 when a window is possible and 1 otherwise,
+    so the launcher can warn before spending time on a build, and can explain
+    instead of leaving the user with a window that never appears.
+    """
+    try:
+        result = subprocess.run(
+            [str(game), "--diagnose"],
+            capture_output=True,
+            text=True,
+            timeout=15,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as error:  # pragma: no cover - rare
+        return True, f"could not probe video: {error}"
+
+    output = (result.stdout or "") + (result.stderr or "")
+    if verbose:
+        for line in output.splitlines():
+            ui.info(line)
+    if result.returncode == 0:
+        return True, output
+    # Distinguish "this build has no SDL3" from "no display server".
+    if "no SDL3" in output:
+        return False, "this build has no SDL3 support (headless only)"
+    if "SDL_Init       : FAILED" in output or "No available video device" in output:
+        return False, "no video device is reachable (no display server)"
+    return False, "SDL selected a driver that cannot open a window"
+
+
 def plan_run(
     target: Path,
     is_package: bool,
@@ -265,6 +297,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--no-build", action="store_true", help="skip the asset build")
     parser.add_argument("--rebuild", action="store_true", help="force a full asset rebuild")
     parser.add_argument("--list", action="store_true", help="list runnable projects")
+    parser.add_argument(
+        "--diagnose", action="store_true", help="report video/display state and exit"
+    )
     parser.add_argument("--dry-run", "-n", action="store_true", help="show commands only")
     parser.add_argument("-v", "--debug", action="store_true", help="show commands")
     parser.add_argument("--quiet", "-q", action="store_true", help="minimal output")
@@ -328,6 +363,13 @@ def main(argv: list[str] | None = None) -> int:
     if arguments.list:
         return list_targets(ui)
 
+    if arguments.diagnose:
+        game = find_executable("bully_game", arguments.build_dir)
+        if game is None:
+            configure_hint(ui)
+            return 2
+        return subprocess.run([str(game), "--diagnose"], check=False).returncode
+
     game = find_executable("bully_game", arguments.build_dir)
     if game is None:
         configure_hint(ui)
@@ -357,11 +399,39 @@ def main(argv: list[str] | None = None) -> int:
         if code != 0:
             return code
 
+    forwarded = forwarded_arguments(arguments)
+
+    # Windowed mode is worth checking first: a build can take a minute, and the
+    # common failure is not an error but a window that never appears.
+    if not arguments.headless and not arguments.dry_run:
+        can_open, reason = probe_video(game, ui, arguments.debug)
+        if not can_open:
+            ui.warn(f"cannot open a window: {reason}")
+            if "no SDL3" in reason:
+                ui.info("this build was configured without SDL3. To get a window:")
+                ui.info("  sudo pacman -S sdl3 mesa")
+                ui.info("  cmake --preset debug && cmake --build --preset debug")
+            else:
+                ui.info("to get a window, run inside a desktop session, use ssh -X,")
+                ui.info("or set DISPLAY. Full report: bully_game --diagnose")
+            fall_back = arguments.yes or not sys.stdin.isatty()
+            if fall_back:
+                ui.info("(--yes / non-interactive: falling back to --headless)")
+            else:
+                answer = input("    run headless instead? [Y/n] ").strip().lower()
+                fall_back = answer in ("", "y", "yes")
+            if not fall_back:
+                ui.error("aborted - pass --headless to run without a window")
+                return 1
+            forwarded.insert(0, "--headless")
+            arguments.headless = True
+            ui.info("running with --headless")
+
     return plan_run(
         target,
         is_package,
         game,
-        forwarded_arguments(arguments),
+        forwarded,
         dry_run=arguments.dry_run,
         verbose=arguments.debug,
         ui=ui,

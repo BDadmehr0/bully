@@ -6,8 +6,15 @@
 add_executable(bully_game src/main.cpp)
 target_link_libraries(bully_game PRIVATE bully_runtime bully_formats bully_core)
 
+# Both of these are optional and are looked up in the top-level CMakeLists; link
+# OpenGL only when the target actually exists (linking a missing imported target
+# is a hard configure error - it used to fail with -DBULLY_BUILD_RUNTIME=ON when
+# the CLI/tests were off and OpenGL was present but SDL3 was not).
 if(TARGET SDL3::SDL3)
-    target_link_libraries(bully_game PRIVATE SDL3::SDL3 OpenGL::GL)
+    target_link_libraries(bully_game PRIVATE SDL3::SDL3)
+    if(TARGET OpenGL::GL)
+        target_link_libraries(bully_game PRIVATE OpenGL::GL)
+    endif()
     # We provide a plain ANSI main(); SDL_MAIN_HANDLED stops SDL from
     # redefining it (required on Windows, harmless on Linux) and means the
     # SDL3main shim library is not needed.

@@ -252,6 +252,12 @@ TEST_CASE("Game host runs a built project headless and reports usage errors", "[
     CHECK(help.exit_code == 0);
     CHECK(help.output.find("--headless") != std::string::npos);
 
+    // --diagnose works without a project and explains the video state.
+    const auto diagnose = run_tool(BULLY_GAME_PATH, "--diagnose", dir.path());
+    INFO(diagnose.output);
+    CHECK((diagnose.exit_code == 0 || diagnose.exit_code == 1));
+    CHECK(diagnose.output.find("video diagnostics") != std::string::npos);
+
     // Missing / wrong kind of argument is a usage error (exit 2), with a hint.
     const auto missing = run_tool(BULLY_GAME_PATH, "does-not-exist", dir.path());
     INFO(missing.output);

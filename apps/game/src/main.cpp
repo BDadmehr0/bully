@@ -14,6 +14,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <map>
@@ -34,6 +35,7 @@ struct Options {
     std::filesystem::path package;
     std::string scene;
     bool headless = false;
+    bool diagnose = false;
     std::uint32_t frames = 0;      // 0 = run until the window closes
     double frame_delta = 1.0 / 60.0;
     bool verbose = false;
@@ -52,6 +54,7 @@ void print_usage()
         "  --scene <id>        entry scene asset id or logical path\n"
         "  --delta <seconds>   fixed frame delta for headless runs (default 1/60)\n"
         "  --verbose           debug logging\n"
+        "  --diagnose          report the video driver and display state, then exit\n"
         "  --help              this text\n");
 }
 
@@ -65,6 +68,8 @@ bool parse(int argc, char** argv, Options& options)
         }
         if (argument == "--headless") {
             options.headless = true;
+        } else if (argument == "--diagnose") {
+            options.diagnose = true;
         } else if (argument == "--verbose") {
             options.verbose = true;
         } else if (argument == "--frames" && i + 1 < argc) {
@@ -93,6 +98,7 @@ bool parse(int argc, char** argv, Options& options)
             return false;
         }
     }
+    if (options.diagnose) return true;
     if (options.project.empty() && options.package.empty()) {
         std::fprintf(stderr, "error: no project or package given\n");
         print_usage();
@@ -169,10 +175,42 @@ int run_headless(const bully::runtime::GameSession& session, const Options& opti
 }
 
 #ifdef BULLY_HAVE_SDL3
+/// True for drivers that accept every call and show nothing.
+///
+/// This is the "the window never opens" bug: with SDL_VIDEO_DRIVER=dummy (or the
+/// offscreen driver) SDL_Init succeeds, SDL_CreateWindow succeeds and the loop
+/// runs - there is simply no window to look at. Printing "Window open" in that
+/// state is a lie, so the host refuses and explains instead.
+bool is_headless_video_driver()
+{
+    const char* driver = SDL_GetCurrentVideoDriver();
+    if (driver == nullptr) return false;
+    return SDL_strcmp(driver, "dummy") == 0 || SDL_strcmp(driver, "offscreen") == 0 ||
+           SDL_strcmp(driver, "evdev") == 0;
+}
+
 int run_windowed(bully::runtime::GameSession& session, const Options& options)
 {
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         std::fprintf(stderr, "error: SDL_Init failed: %s\n", SDL_GetError());
+        std::fprintf(stderr,
+                     "       No video device: this session has no display "
+                     "(SSH without X forwarding, a bare TTY, or a container).\n"
+                     "       Run with --headless, or start a desktop session / use "
+                     "ssh -X.\n");
+        return 1;
+    }
+    // Check the driver *before* creating a window: SDL happily creates one on
+    // the dummy driver and never shows it.
+    if (is_headless_video_driver()) {
+        std::fprintf(stderr,
+                     "error: SDL selected the '%s' video driver, which cannot open a "
+                     "real window\n"
+                     "       (usually because no display server is reachable).\n"
+                     "       Run with --headless, or start a desktop session / use "
+                     "ssh -X.\n",
+                     SDL_GetCurrentVideoDriver());
+        SDL_Quit();
         return 1;
     }
     SDL_Window* window = SDL_CreateWindow("Bully Studio", 1280, 720, 0);
@@ -188,8 +226,11 @@ int run_windowed(bully::runtime::GameSession& session, const Options& options)
         SDL_Quit();
         return 1;
     }
-    std::printf("Window open - close it (or press Escape) to exit\n");
+    std::printf("Window open (%s driver, %dx%d) - close it (or press Escape) to exit\n",
+                SDL_GetCurrentVideoDriver() != nullptr ? SDL_GetCurrentVideoDriver() : "?",
+                1280, 720);
     std::printf("  W/A/S/D move, E interact, Space advance dialogue\n");
+    std::fflush(stdout);
 
     std::uint64_t previous = SDL_GetTicks();
     bool running = true;
@@ -260,6 +301,54 @@ int run_windowed(bully::runtime::GameSession& session, const Options& options)
 
 }  // namespace
 
+#ifdef BULLY_HAVE_SDL3
+/// Explains whether a window can actually be opened here. Separate from
+/// run_windowed so it works without a project, and so a bug report can include
+/// it verbatim.
+int run_diagnose()
+{
+    std::printf("bully_game video diagnostics\n");
+#ifdef BULLY_HAVE_SDL3
+    std::printf("  build          : SDL3 present\n");
+#else
+    std::printf("  build          : no SDL3 (headless only)\n");
+#endif
+    const char* requested = std::getenv("SDL_VIDEO_DRIVER");
+    std::printf("  SDL_VIDEO_DRIVER: %s\n", requested != nullptr ? requested : "(unset)");
+    const char* display = std::getenv("DISPLAY");
+    const char* wayland = std::getenv("WAYLAND_DISPLAY");
+    const char* session = std::getenv("XDG_SESSION_TYPE");
+    std::printf("  DISPLAY        : %s\n", display != nullptr ? display : "(unset)");
+    std::printf("  WAYLAND_DISPLAY: %s\n", wayland != nullptr ? wayland : "(unset)");
+    std::printf("  XDG_SESSION_TYPE: %s\n", session != nullptr ? session : "(unset)");
+
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
+        std::printf("  SDL_Init       : FAILED (%s)\n", SDL_GetError());
+        std::printf("\nNo video device is reachable. Use --headless, or connect a display\n"
+                    "(desktop session, ssh -X, or set DISPLAY).\n");
+        return 1;
+    }
+    const char* driver = SDL_GetCurrentVideoDriver();
+    std::printf("  SDL driver     : %s\n", driver != nullptr ? driver : "(null)");
+    int displays = 0;
+    SDL_free(SDL_GetDisplays(&displays));
+    std::printf("  displays       : %d\n", displays);
+    const int num_drivers = SDL_GetNumVideoDrivers();
+    std::printf("  drivers built  :");
+    for (int i = 0; i < num_drivers; ++i) std::printf(" %s", SDL_GetVideoDriver(i));
+    std::printf("\n");
+    const bool headless_driver = is_headless_video_driver();
+    std::printf("  window possible: %s\n", headless_driver ? "NO" : "yes");
+    SDL_Quit();
+    if (headless_driver) {
+        std::printf("\nSDL selected a driver that cannot show a window. Start a desktop\n"
+                    "session, use ssh -X, or run with --headless.\n");
+        return 1;
+    }
+    return 0;
+}
+#endif
+
 int main(int argc, char** argv)
 {
     Options options;
@@ -277,6 +366,22 @@ int main(int argc, char** argv)
     logger.set_min_level(options.verbose ? bully::core::LogLevel::Debug
                                          : bully::core::LogLevel::Warn);
     (void)logger.add_sink(bully::core::Logger::stderr_sink());
+
+#ifdef BULLY_HAVE_SDL3
+    if (options.diagnose) return run_diagnose();
+#else
+    if (options.diagnose) {
+        // Same report shape as the SDL3 path, so scripts and users see one format.
+        std::printf("bully_game video diagnostics\n");
+        std::printf("  build          : no SDL3 (headless only)\n");
+        std::printf("  displays       : 0\n");
+        std::printf("  window possible: NO\n");
+        std::printf("\nThis binary cannot open a window. Run with --headless.\n"
+                    "To build the windowed host, install SDL3 and rebuild:\n"
+                    "  sudo pacman -S sdl3 mesa   # then re-run cmake --preset debug\n");
+        return 1;
+    }
+#endif
 
     bully::runtime::SessionConfig config;
     if (!options.package.empty()) {

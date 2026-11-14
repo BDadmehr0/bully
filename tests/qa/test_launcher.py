@@ -141,6 +141,14 @@ def main() -> int:
         else:
             check(False, "could not build a package to test with")
 
+        print("--diagnose reports without needing a project")
+        result = launcher.run("--diagnose")
+        check(result.returncode in (0, 1), f"--diagnose exits 0 or 1 (got {result.returncode})")
+        check("bully_game video diagnostics" in result.stdout,
+              "--diagnose prints a report")
+        check("window possible" in result.stdout or "SDL_Init" in result.stdout,
+              "--diagnose says whether a window is possible")
+
         print("no build tree")
         result = launcher.run(
             str(project), "--headless", "--build-dir", str(Path(temporary) / "nope")

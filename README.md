@@ -95,6 +95,14 @@ assets decoded:    2
 mounted assets:    4 (1 mounts)
 ```
 
+**If no window appears:** run `bully_game --diagnose` (or
+`python3 scripts/run_game.py --diagnose`). It prints the SDL video driver, the
+display environment and whether a window is possible. The usual causes are
+running over plain SSH, a bare TTY, or a container with no display server - SDL
+then falls back to its `dummy` driver, which "opens" a window that never appears.
+The host now refuses that case with an explanation instead of printing
+"Window open", and `run_game.py` detects it up front and offers `--headless`.
+
 **About the window:** the SDL3 host opens a window, clears it to the loaded
 scene's ambient colour and draws a moving marker so you can see the loop
 running. It is not a 3D renderer - there is no mesh rasteriser yet, and
