@@ -33,6 +33,14 @@ function(bully_setup_warnings)
         if(BULLY_WARNINGS_AS_ERRORS)
             add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Werror>)
         endif()
+        # libstdc++ container assertions turn silent out-of-bounds vector access
+        # into an immediate abort. Some distributions (Arch) enable them in their
+        # own builds, which is how an out-of-bounds read in the texture mip
+        # generator was caught on one machine and not another. Turning them on
+        # for Debug and sanitizer builds makes the diagnosis reproducible.
+        if(BULLY_STL_ASSERTIONS AND NOT MSVC)
+            add_compile_definitions(_GLIBCXX_ASSERTIONS)
+        endif()
         if(BULLY_ENABLE_SANITIZERS)
             add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
             add_link_options(-fsanitize=address,undefined)

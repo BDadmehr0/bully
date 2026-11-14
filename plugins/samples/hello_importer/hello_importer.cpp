@@ -33,10 +33,30 @@ std::string from_view(bully_str text)
 
 bully_str to_view(const std::string& text)
 {
-    bully_str view;
+    bully_str view{};
     view.data = text.data();
     view.size = text.size();
+    view.free_with_host = 0;
     return view;
+}
+
+/// Hands a string to the host through the host allocator.
+///
+/// Returning a view into a local std::string would dangle the moment the
+/// callback returns; the host would then copy freed memory. Allocating with
+/// host->alloc and setting free_with_host makes the host responsible for the
+/// lifetime instead.
+bully_str to_owned(bully_str value, const bully_host_api* host)
+{
+    if (host == nullptr || host->alloc == nullptr) return to_view({});
+    auto* buffer = static_cast<char*>(host->alloc(host->host_handle, value.size));
+    if (buffer == nullptr) return to_view({});
+    std::memcpy(buffer, value.data, value.size);
+    bully_str owned{};
+    owned.data = buffer;
+    owned.size = value.size;
+    owned.free_with_host = 1;
+    return owned;
 }
 
 const bully_plugin_descriptor* descriptor()
@@ -47,11 +67,11 @@ const bully_plugin_descriptor* descriptor()
     static const std::string kVendor = "Bully Studio";
     static const std::string kDescription = "Sample plugin demonstrating the stable C plugin ABI";
     static const bully_plugin_descriptor kDescriptor{
-        bully_str{kId.data(), kId.size()},
-        bully_str{kName.data(), kName.size()},
-        bully_str{kVersion.data(), kVersion.size()},
-        bully_str{kVendor.data(), kVendor.size()},
-        bully_str{kDescription.data(), kDescription.size()},
+        to_view(kId),
+        to_view(kName),
+        to_view(kVersion),
+        to_view(kVendor),
+        to_view(kDescription),
         BULLY_PLUGIN_ABI_MAJOR,
         BULLY_PLUGIN_ABI_MINOR,
         (1u << BULLY_CAP_IMPORTER) | (1u << BULLY_CAP_QA_RULE),
@@ -165,7 +185,7 @@ bully_result run_import(bully_str /*importer_id*/, const bully_import_request* r
     response->output.capacity = bytes.size();
     const std::string summary = "hello importer produced " + std::to_string(vertices.size()) +
                                 " vertices from " + relative;
-    response->summary = to_view(summary);
+    response->summary = to_owned(to_view(summary), g_host);
     return BULLY_OK;
 }
 

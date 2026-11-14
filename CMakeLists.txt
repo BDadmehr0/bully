@@ -35,6 +35,7 @@ option(BULLY_BUILD_TESTS       "Build unit/integration tests" ON)
 option(BULLY_BUILD_CLI         "Build the headless asset/pipeline CLI" ON)
 option(BULLY_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" OFF)
 option(BULLY_ENABLE_SANITIZERS "Enable ASan/UBSan in debug builds" OFF)
+option(BULLY_STL_ASSERTIONS   "Enable libstdc++ container assertions (_GLIBCXX_ASSERTIONS)" ON)
 
 # Global language settings.
 set(CMAKE_CXX_STANDARD 20)

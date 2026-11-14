@@ -52,8 +52,12 @@ typedef enum bully_result {
 /* --------------------------------------------------------------- strings */
 /* String views are not NUL-terminated; `data` may be NULL when `size` is 0. */
 typedef struct bully_str {
-    const char* data;
+    const char* data;           /* not NUL-terminated; may be NULL when size == 0 */
     size_t size;
+    /* Non-zero => the host releases `data` with host->free after copying it.
+     * Use this for strings too large to keep in static storage. */
+    int free_with_host;
+    int reserved;               /* padding, always zero */
 } bully_str;
 
 /* -------------------------------------------------------------- buffers */
@@ -168,8 +172,13 @@ typedef struct bully_import_response {
     /* Plugin allocates `output.data` with host->alloc. The host takes ownership
      * and frees it after writing the file. */
     bully_buf output;
-    bully_str summary;           /* optional, host-copies */
-    bully_str report_json;       /* optional, host-copies */
+    /* Optional strings. The host copies them before returning, but they must
+     * still be valid when the plugin returns from `run_import`: pointing at a
+     * local std::string is a use-after-free the host cannot detect. Either use
+     * static storage or allocate through host->alloc, which the host then frees
+     * (set bully_str.free_with_host accordingly). */
+    bully_str summary;
+    bully_str report_json;
     uint32_t warning_count;
 } bully_import_response;
 

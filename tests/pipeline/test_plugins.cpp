@@ -129,6 +129,12 @@ TEST_CASE("Plugin importers produce a compiled model through the bridge", "[plug
     auto imported = bridge->import(context);
     REQUIRE(imported.has_value());
     CHECK_FALSE(imported.value().output_bytes.empty());
+    // The summary comes back from the plugin as host-allocated storage that the
+    // host copies and then frees. Reading it here is the regression test for a
+    // use-after-free where the sample plugin returned a view into a local
+    // std::string (only visible under ASan).
+    CHECK(imported.value().summary.find("3 vertices") != std::string::npos);
+    CHECK(imported.value().summary.find("object.hello") != std::string::npos);
 
     formats::ModelDocument document;
     auto decoded = document.deserialize(imported.value().output_bytes);
@@ -136,6 +142,12 @@ TEST_CASE("Plugin importers produce a compiled model through the bridge", "[plug
     CHECK(decoded.value().asset_id == "plugin-asset");
     REQUIRE(decoded.value().meshes.size() == 1);
     CHECK(decoded.value().compute_statistics().vertex_count == 3);
+
+    // Importing twice exercises the per-call response reset: a plugin that
+    // leaves a field untouched must not hand back the previous call's pointer.
+    auto again = bridge->import(context);
+    REQUIRE(again.has_value());
+    CHECK(again.value().summary == imported.value().summary);
 
     registry.clear();
 }

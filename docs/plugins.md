@@ -258,3 +258,19 @@ the plugin's own diagnostic codes and are attributed to the plugin in the report
 host, imports a `.hello` asset, runs its QA rule, unloads it and asserts that
 every registration disappeared. Use it as a template for your own plugin's
 integration test.
+
+## String ownership in import responses
+
+`bully_import_response::summary` and `report_json` must be valid when
+`run_import` returns. The host copies them immediately, so a plugin cannot hand
+back a view into a local `std::string` - that is a use-after-free, and the host
+has no way to detect it.
+
+Two correct patterns:
+
+* static storage (fine for fixed strings such as a description), or
+* allocate through `host->alloc` and set `bully_str.free_with_host = 1`; the
+  host copies the bytes and then releases them with `host->free`.
+
+The response struct is zeroed before every call, so a plugin that leaves a field
+untouched never exposes a stale pointer from a previous import.

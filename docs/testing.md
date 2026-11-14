@@ -21,6 +21,10 @@ The suite is five executables registered with CTest:
 | `exporters` | `tests/test_exporters` | compiled asset → PNG/WAV/OBJ/JSON export and round-trip re-import |
 | `headless` | `tests/test_headless` | the CLI end-to-end in a scratch project |
 
+Build and run the `asan` preset as well when changing anything that handles raw
+byte buffers. Two real bugs (an out-of-bounds read in mip generation and a
+use-after-free across the plugin ABI) were invisible to the default build.
+
 Two checks run alongside the suites:
 
 * `scripts/check_includes.py` - every source file includes the standard headers

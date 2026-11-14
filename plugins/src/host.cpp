@@ -39,6 +39,22 @@ std::string from_str(bully_str text)
     return std::string(text.data, text.size);
 }
 
+/// Copies an optional plugin-provided string and honours the ownership flag.
+///
+/// The ABI allows a plugin to hand back storage it allocated with host->alloc
+/// by setting `free_with_host`; the host copies the bytes and then releases
+/// them, so a plugin never has to keep a buffer alive past its callback.
+std::string take_str(bully_str& text, const bully_host_api* api)
+{
+    std::string copy = from_str(text);
+    if (text.free_with_host != 0 && text.data != nullptr && api != nullptr &&
+        api->free != nullptr) {
+        api->free(api->host_handle, const_cast<char*>(text.data));
+    }
+    text = bully_str{};
+    return copy;
+}
+
 /// Default state store: remembers choices for the lifetime of the process.
 class MemoryStateStore final : public PluginStateStore {
 public:
@@ -721,6 +737,8 @@ core::Result<PluginImportOutput> PluginHost::run_plugin_import(
     request.settings.count = key_values.size();
     request.host = host_api_.get();
     request.host_handle = this;
+    // Zeroed per call: a plugin may leave fields untouched, so stale pointers
+    // from a previous import must never be read as this call's result.
     bully_import_response response{};
     bully_result result = BULLY_ERR_INTERNAL;
     try {
@@ -740,8 +758,8 @@ core::Result<PluginImportOutput> PluginHost::run_plugin_import(
         output.bytes.assign(response.output.data, response.output.data + response.output.size);
         std::free(response.output.data);
     }
-    output.summary = from_str(response.summary);
-    output.report_json = from_str(response.report_json);
+    output.summary = take_str(response.summary, host_api_.get());
+    output.report_json = take_str(response.report_json, host_api_.get());
     output.warning_count = response.warning_count;
     return output;
 }

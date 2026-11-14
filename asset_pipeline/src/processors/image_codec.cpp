@@ -557,10 +557,20 @@ core::Result<formats::TextureDocument> build_texture_document(ImageData image,
     document.asset_id = std::move(asset_id);
     document.name = std::move(name);
     document.source_path = std::move(source_path);
-    document.format = options.target_format;
+    // The mip chain is generated and resized in RGBA8 (four bytes per pixel),
+    // so the document must claim RGBA8 until every level has been quantised.
+    // Setting the requested retro format up front meant generate_mip_chain()
+    // computed strides for 3-byte RGB8 / 1-byte R8 while the base level still
+    // held 4-byte pixels, and the next level read past the end of the buffer.
+    document.format = formats::PixelFormat::Rgba8;
     document.sampler_filter = options.sampler_filter;
     document.wrap_mode = options.wrap_mode;
     document.srgb = options.srgb;
+
+    if (!formats::is_supported_encoding(options.target_format)) {
+        diagnostics.error("BULLY-IMG-0054", "selected pixel format is not encodable");
+        return core::Result<formats::TextureDocument>(std::move(diagnostics));
+    }
 
     std::uint32_t width = image.width;
     std::uint32_t height = image.height;
@@ -618,6 +628,14 @@ core::Result<formats::TextureDocument> build_texture_document(ImageData image,
     document.width = width;
     document.height = height;
 
+    const auto expected_bytes = static_cast<std::size_t>(width) * height * 4u;
+    if (image.pixels.size() < expected_bytes) {
+        diagnostics.error("BULLY-IMG-0055",
+                          "decoded image is short: " + std::to_string(image.pixels.size()) +
+                              " bytes for " + std::to_string(width) + "x" +
+                              std::to_string(height) + " RGBA8");
+        return core::Result<formats::TextureDocument>(std::move(diagnostics));
+    }
     formats::MipLevel base;
     base.width = width;
     base.height = height;
@@ -633,12 +651,8 @@ core::Result<formats::TextureDocument> build_texture_document(ImageData image,
             diagnostics.append(chain.diagnostics());
         }
     }
-    if (!formats::is_supported_encoding(options.target_format)) {
-        diagnostics.error("BULLY-IMG-0054", "selected pixel format is not encodable");
-        return core::Result<formats::TextureDocument>(std::move(diagnostics));
-    }
-    // Quantise if a retro format was requested: the mip chain is generated in
-    // RGBA8 above, then every level is converted here.
+    // Quantise if a retro format was requested: the mip chain was generated in
+    // RGBA8 above, so every level still holds four bytes per pixel here.
     if (options.target_format != formats::PixelFormat::Rgba8) {
         const auto bytes_per_pixel = formats::bytes_per_pixel(options.target_format);
         for (auto& mip : document.mips) {
@@ -686,6 +700,8 @@ core::Result<formats::TextureDocument> build_texture_document(ImageData image,
             mip.pixels = std::move(converted);
             mip.stride = mip.width * bytes_per_pixel;
         }
+        // Only now does the document describe what its buffers actually contain.
+        document.format = options.target_format;
     }
     auto validation = document.validate();
     if (!validation) return core::Result<formats::TextureDocument>(validation.diagnostics());

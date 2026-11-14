@@ -123,6 +123,9 @@ if(NOT MSVC)
 endif()
 
 # --- headless QA dashboard over a scaffolded project -------------------------
+# This suite drives the compiled CLI, so it only exists when the CLI is built
+# (-DBULLY_BUILD_CLI=OFF used to break configure through $<TARGET_FILE:...>).
+if(BULLY_BUILD_CLI)
 add_executable(test_headless qa/test_headless.cpp)
 target_link_libraries(test_headless PRIVATE bully_test_support bully_pipeline
     bully_project bully_templates)
@@ -130,8 +133,12 @@ target_compile_definitions(test_headless PRIVATE
     BULLY_CLI_PATH="$<TARGET_FILE:bully_asset_cli>")
 add_dependencies(test_headless bully_asset_cli)
 add_test(NAME headless COMMAND test_headless)
+endif()
 
 # Third-party headers and test scaffolding legitimately produce unused helpers.
-foreach(target test_core test_formats test_pipeline test_plugins test_headless test_runtime test_exporters)
+foreach(target test_core test_formats test_pipeline test_plugins test_runtime test_exporters)
     target_compile_options(${target} PRIVATE -Wno-unused-function)
 endforeach()
+if(TARGET test_headless)
+    target_compile_options(test_headless PRIVATE -Wno-unused-function)
+endif()

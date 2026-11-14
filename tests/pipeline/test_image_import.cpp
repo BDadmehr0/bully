@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <utility>
@@ -175,6 +176,55 @@ TEST_CASE("Image importer honours max_size and pixel formats", "[pipeline][image
     auto decoded_quantised = quantised_document.deserialize(quantised.value().output_bytes);
     REQUIRE(decoded_quantised.has_value());
     CHECK(decoded_quantised.value().format == formats::PixelFormat::Rgb565);
+}
+
+TEST_CASE("Every retro pixel format produces consistent mip sizes", "[pipeline][image]")
+{
+    // Regression: the texture builder set document.format to the requested
+    // retro format *before* generating the mip chain. Mip generation therefore
+    // used the target format's bytes-per-pixel (3 for RGB8, 1 for R8) while the
+    // base level still held RGBA8 pixels, and the second level read past the end
+    // of the buffer. Out-of-bounds vector::operator[] is only diagnosed when
+    // _GLIBCXX_ASSERTIONS is on, which is why this passed on some toolchains and
+    // aborted on others.
+    pipeline::ImageData image;
+    image.width = 8;
+    image.height = 8;
+    image.pixels.resize(static_cast<std::size_t>(image.width) * image.height * 4);
+    for (std::size_t i = 0; i < image.pixels.size(); ++i) {
+        image.pixels[i] = static_cast<std::uint8_t>(i * 7);
+    }
+
+    const std::pair<const char*, formats::PixelFormat> formats_to_check[] = {
+        {"rgba8", formats::PixelFormat::Rgba8},
+        {"rgb8", formats::PixelFormat::Rgb8},
+        {"r8", formats::PixelFormat::R8},
+        {"rgba4444", formats::PixelFormat::Rgba4444},
+        {"rgb565", formats::PixelFormat::Rgb565},
+    };
+    for (const auto& [label, format] : formats_to_check) {
+        INFO("pixel format: " << label);
+        pipeline::TextureBuildOptions options;
+        options.target_format = format;
+        options.generate_mips = true;
+        auto built = pipeline::build_texture_document(image, options, "id", label, "src");
+        REQUIRE(built.has_value());
+        const auto& document = built.value();
+        CHECK(document.format == format);
+        CHECK(document.mips.size() == 4);  // 8x8, 4x4, 2x2, 1x1
+        const auto bpp = formats::bytes_per_pixel(format);
+        for (const auto& mip : document.mips) {
+            CHECK(mip.stride == mip.width * bpp);
+            CHECK(mip.pixels.size() ==
+                  static_cast<std::size_t>(mip.width) * mip.height * bpp);
+        }
+        CHECK(document.validate().has_value());
+        // And it must survive the round trip through the binary format.
+        formats::TextureDocument parsed;
+        auto decoded = parsed.deserialize(document.serialize());
+        REQUIRE(decoded.has_value());
+        CHECK(decoded.value().format == format);
+    }
 }
 
 TEST_CASE("Image importer fails loudly on an undecodable file", "[pipeline][image]")

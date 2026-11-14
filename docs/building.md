@@ -71,6 +71,24 @@ mistake into a hard error instead of a green "no tests were found".
 Note the `debug` and `release` presets share `build/` while `headless` uses
 `build/headless/`; `make` uses `build/` by default.
 
+## Sanitizers and container assertions
+
+Debug builds define `_GLIBCXX_ASSERTIONS` by default (`-DBULLY_STL_ASSERTIONS=OFF`
+to disable). That turns out-of-bounds `std::vector` access into an immediate
+abort instead of silent heap corruption. Distributions differ here - Arch's GCC
+enables it in its default flags - which is how an out-of-bounds read in the
+texture mip generator aborted on one machine and passed everywhere else.
+
+```sh
+cmake --preset asan          # ASan + UBSan + assertions
+cmake --build --preset asan -j"$(nproc)"
+ctest --preset asan
+```
+
+Run the `asan` preset before touching code that indexes raw buffers (image
+codecs, binary readers, the mip chain). It has already caught a heap overflow
+and a plugin ABI use-after-free that the normal suite could not see.
+
 ## Full build
 
 ```sh
