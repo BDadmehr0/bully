@@ -131,6 +131,13 @@ target_link_libraries(test_headless PRIVATE bully_test_support bully_pipeline
     bully_project bully_templates)
 target_compile_definitions(test_headless PRIVATE
     BULLY_CLI_PATH="$<TARGET_FILE:bully_asset_cli>")
+# The game host is exercised the same way: argument handling and a headless run
+# over a scaffolded project. It is built by every preset, so this always exists.
+if(TARGET bully_game)
+    target_compile_definitions(test_headless PRIVATE
+        BULLY_GAME_PATH="$<TARGET_FILE:bully_game>")
+    add_dependencies(test_headless bully_game)
+endif()
 add_dependencies(test_headless bully_asset_cli)
 add_test(NAME headless COMMAND test_headless)
 endif()

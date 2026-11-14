@@ -89,9 +89,27 @@ not double the speed), `axis()` cancels opposite directions, and
 
 Rebinding is a data edit, which is what the Studio's Controls panel writes.
 
+## Running it
+
+```sh
+bully_game <project-dir | package.bpackage> [--headless] [--frames N] [--verbose]
+```
+
+A project directory is the folder holding `project.bullyproj`; a manifest path
+is also accepted and resolved to its parent. The project must have been built -
+`bully_game` loads compiled assets and never compiles them, so a project with an
+empty `built/` is rejected with exit 2 and the command to run.
+
+Without `--headless` the SDL3 host opens a window; with it, the same fixed-step
+loop runs for a fixed number of frames and prints statistics. Both modes boot the
+same `GameSession`.
+
 ## What is *not* here yet
 
-The renderer, physics, audio mixing backends and animation blending are separate
-subsystems and are listed in [architecture.md](architecture.md) as the remaining
-runtime layers. The asset, story, clock and input layers are complete and
-tested, and `apps/game` consumes exactly those.
+**There is no 3D renderer.** The windowed host clears the window to the loaded
+scene's ambient colour and draws a moving marker so the loop is visibly alive;
+it does not rasterise meshes. Physics, audio mixing backends and animation
+blending are likewise separate subsystems, listed in
+[architecture.md](architecture.md) as the remaining runtime layers. The asset,
+story, clock and input layers are complete and tested, and `apps/game` consumes
+exactly those.

@@ -8,7 +8,10 @@ target_link_libraries(bully_game PRIVATE bully_runtime bully_formats bully_core)
 
 if(TARGET SDL3::SDL3)
     target_link_libraries(bully_game PRIVATE SDL3::SDL3 OpenGL::GL)
-    target_compile_definitions(bully_game PRIVATE BULLY_HAVE_SDL3=1)
+    # We provide a plain ANSI main(); SDL_MAIN_HANDLED stops SDL from
+    # redefining it (required on Windows, harmless on Linux) and means the
+    # SDL3main shim library is not needed.
+    target_compile_definitions(bully_game PRIVATE BULLY_HAVE_SDL3=1 SDL_MAIN_HANDLED)
     message(STATUS "  bully_game        : windowed + headless (SDL3)")
 else()
     message(STATUS "  bully_game        : headless only (SDL3 not found)")

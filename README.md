@@ -40,7 +40,52 @@ cd mygame
 ../build/headless/apps/game/bully_game . --headless --frames 300
 ```
 
-Or with the Makefile: `make`, `make test`, `make test-all`, `make run`.
+Or with the Makefile: `make`, `make test`, `make test-all`, `make play`, `make run`.
+
+## Running the game
+
+`bully_game` takes a **project directory** (the folder containing
+`project.bullyproj`) or a built `.bpackage`, and needs the project to be built
+first - it runs compiled assets, it does not compile them.
+
+```sh
+BIN=build/headless/apps/game/bully_game
+
+$BIN examples/hello-retro                          # windowed (needs SDL3)
+$BIN examples/hello-retro --headless --frames 300  # no window, fixed frames
+$BIN examples/hello-retro/packages/hello-retro.bpackage   # run a shipped package
+$BIN --help
+```
+
+| Option | Effect |
+|---|---|
+| `--headless` | run without a window (CI, bug reports); prints statistics |
+| `--frames N` | stop after N frames (headless default: 600) |
+| `--scene <id>` | entry scene asset id or logical path |
+| `--delta <s>` | fixed frame delta for headless runs (default 1/60) |
+| `--verbose` | debug logging |
+
+Exit codes: `0` ran, `1` boot failure, `2` usage error (missing project, wrong
+path, nothing compiled - each with a message saying what to do).
+
+Headless output is the same loop the window uses:
+
+```
+frames:            300
+fixed steps:       300
+simulated seconds: 5.000
+assets decoded:    2
+mounted assets:    4 (1 mounts)
+```
+
+**About the window:** the SDL3 host opens a window, clears it to the loaded
+scene's ambient colour and draws a moving marker so you can see the loop
+running. It is not a 3D renderer - there is no mesh rasteriser yet, and
+`docs/runtime.md` says so. The simulation (clock, story, input, asset mounts) is
+fully live in both modes.
+
+Without SDL3 installed the binary still builds, and `--headless` works; asking
+for a window prints how to install SDL3 and exits 1.
 
 ## What it does
 

@@ -27,6 +27,24 @@ struct CommandResult {
     std::string output;
 };
 
+/// Runs any built executable (CLI, game host) with `arguments`.
+CommandResult run_tool(const char* tool, const std::string& arguments,
+                       const std::filesystem::path& cwd)
+{
+    std::string command = std::string("\"") + tool + "\" " + arguments + " 2>&1";
+    const std::string changed = "cd \"" + cwd.string() + "\" && " + command;
+    CommandResult result;
+    FILE* pipe = popen(changed.c_str(), "r");
+    REQUIRE(pipe != nullptr);
+    std::array<char, 512> buffer{};
+    while (std::fgets(buffer.data(), static_cast<int>(buffer.size()), pipe) != nullptr) {
+        result.output += buffer.data();
+    }
+    const int status = pclose(pipe);
+    result.exit_code = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
+    return result;
+}
+
 CommandResult run(const std::string& arguments, const std::filesystem::path& cwd)
 {
     std::string command = std::string("\"") + BULLY_CLI_PATH + "\" " + arguments +
@@ -219,6 +237,54 @@ TEST_CASE("CLI exports compiled assets back to editable source files", "[headles
     INFO(missing.output);
     CHECK(missing.exit_code == 1);
 }
+
+#ifdef BULLY_GAME_PATH
+TEST_CASE("Game host runs a built project headless and reports usage errors", "[headless]")
+{
+    test::TempDir dir;
+    const auto project = dir / "playable";
+    REQUIRE(run("new \"" + project.string() + "\" --template retro-action", dir.path()).exit_code == 0);
+    REQUIRE(run("build", project).exit_code == 0);
+
+    // --help is a request, not a usage error.
+    const auto help = run_tool(BULLY_GAME_PATH, "--help", dir.path());
+    INFO(help.output);
+    CHECK(help.exit_code == 0);
+    CHECK(help.output.find("--headless") != std::string::npos);
+
+    // Missing / wrong kind of argument is a usage error (exit 2), with a hint.
+    const auto missing = run_tool(BULLY_GAME_PATH, "does-not-exist", dir.path());
+    INFO(missing.output);
+    CHECK(missing.exit_code == 2);
+    CHECK(missing.output.find("not a project directory") != std::string::npos);
+
+    // A real run: the same fixed-step loop the windowed host uses.
+    const auto played = run_tool(BULLY_GAME_PATH,
+                                 "\"" + project.string() + "\" --headless --frames 30",
+                                 dir.path());
+    INFO(played.output);
+    CHECK(played.exit_code == 0);
+    CHECK(played.output.find("fixed steps:       30") != std::string::npos);
+
+    // A project directory is expected, but a manifest path is accepted too
+    // (make run used to pass the .bullyproj file and fail).
+    const auto via_manifest = run_tool(BULLY_GAME_PATH,
+                                       "\"" + (project / "project.bullyproj").string() +
+                                           "\" --headless --frames 5",
+                                       dir.path());
+    INFO(via_manifest.output);
+    CHECK(via_manifest.exit_code == 0);
+
+    // A project with no compiled assets must fail with an actionable message.
+    const auto unbuilt = dir / "unbuilt";
+    REQUIRE(run("new \"" + unbuilt.string() + "\"", dir.path()).exit_code == 0);
+    const auto refused = run_tool(BULLY_GAME_PATH, "\"" + unbuilt.string() + "\" --headless",
+                                  dir.path());
+    INFO(refused.output);
+    CHECK(refused.exit_code == 2);
+    CHECK(refused.output.find("build the project first") != std::string::npos);
+}
+#endif
 
 TEST_CASE("Compiled template assets decode with the public format API", "[headless]")
 {

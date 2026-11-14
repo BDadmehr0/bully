@@ -80,7 +80,12 @@ bool parse(int argc, char** argv, Options& options)
             if (path.extension() == ".bpackage") {
                 options.package = path;
             } else {
-                options.project = path;
+                // `bully_game mygame/project.bullyproj` is a natural thing to
+                // type (and what `make run` used to do); treat a manifest path
+                // as its containing project directory.
+                options.project = path.filename() == "project.bullyproj"
+                                      ? path.parent_path()
+                                      : path;
             }
         } else {
             std::fprintf(stderr, "error: unexpected argument '%s'\n", argument.c_str());
@@ -91,6 +96,46 @@ bool parse(int argc, char** argv, Options& options)
         std::fprintf(stderr, "error: no project or package given\n");
         print_usage();
         return false;
+    }
+    if (!options.package.empty()) {
+        std::error_code code;
+        if (!std::filesystem::exists(options.package, code)) {
+            std::fprintf(stderr, "error: package not found: %s\n",
+                         options.package.string().c_str());
+            return false;
+        }
+    } else {
+        std::error_code code;
+        if (!std::filesystem::is_directory(options.project, code)) {
+            std::fprintf(stderr,
+                         "error: not a project directory: %s\n"
+                         "       pass the project root (the folder holding "
+                         "project.bullyproj), e.g.\n"
+                         "         bully_game mygame --headless\n",
+                         options.project.string().c_str());
+            return false;
+        }
+        // `new` creates an (empty, .gitkeep-only) built/ directory, so the
+        // directory existing proves nothing. A project with no compiled assets
+        // would boot, mount nothing and report zeros, which reads as success.
+        std::size_t compiled = 0;
+        const auto built = options.project / "built";
+        if (std::filesystem::is_directory(built, code)) {
+            for (const auto& entry : std::filesystem::recursive_directory_iterator(built)) {
+                const auto name = entry.path().filename().string();
+                if (name == ".gitkeep") continue;
+                if (entry.is_regular_file()) ++compiled;
+            }
+        }
+        if (compiled == 0) {
+            std::fprintf(stderr,
+                         "error: no compiled assets in %s\n"
+                         "       build the project first:\n"
+                         "         bully_asset_cli build --project %s\n",
+                         built.string().c_str(),
+                         options.project.string().c_str());
+            return false;
+        }
     }
     if (!options.headless && options.frames == 0) options.frames = 0;
     if (options.headless && options.frames == 0) options.frames = 600;
@@ -135,7 +180,15 @@ int run_windowed(bully::runtime::GameSession& session, const Options& options)
         SDL_Quit();
         return 1;
     }
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, nullptr);
+    if (renderer == nullptr) {
+        std::fprintf(stderr, "error: SDL_CreateRenderer failed: %s\n", SDL_GetError());
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return 1;
+    }
     std::printf("Window open - close it (or press Escape) to exit\n");
+    std::printf("  W/A/S/D move, E interact, Space advance dialogue\n");
 
     std::uint64_t previous = SDL_GetTicks();
     bool running = true;
@@ -168,9 +221,36 @@ int run_windowed(bully::runtime::GameSession& session, const Options& options)
         session.end_frame();
         ++frames;
         if (options.frames != 0 && frames >= options.frames) running = false;
+
+        // Clear to the scene's ambient colour and show a couple of live values.
+        // A plain blank window gives no feedback that the loop is running; this
+        // is still not a 3D renderer, and docs/runtime.md says so.
+        float r = 0.09f;
+        float g = 0.10f;
+        float b = 0.13f;
+        if (const auto* scene = session.scene()) {
+            r = scene->environment.ambient_color.x;
+            g = scene->environment.ambient_color.y;
+            b = scene->environment.ambient_color.z;
+        }
+        SDL_SetRenderDrawColor(renderer, static_cast<Uint8>(r * 255.0f),
+                               static_cast<Uint8>(g * 255.0f),
+                               static_cast<Uint8>(b * 255.0f), 255);
+        SDL_RenderClear(renderer);
+        // A moving marker proves the fixed-step loop is alive.
+        const float phase = static_cast<float>(frames % 240) / 240.0f;
+        SDL_FRect marker{};
+        marker.w = 64.0f;
+        marker.h = 64.0f;
+        marker.x = 40.0f + phase * 1000.0f;
+        marker.y = 300.0f;
+        SDL_SetRenderDrawColor(renderer, 240, 200, 90, 255);
+        SDL_RenderFillRect(renderer, &marker);
+        SDL_RenderPresent(renderer);
     }
 
     print_statistics(session);
+    SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
     return 0;
@@ -182,7 +262,14 @@ int run_windowed(bully::runtime::GameSession& session, const Options& options)
 int main(int argc, char** argv)
 {
     Options options;
-    if (!parse(argc, argv, options)) return 2;
+    if (!parse(argc, argv, options)) {
+        // --help is a request, not a usage error.
+        for (int i = 1; i < argc; ++i) {
+            const std::string argument = argv[i];
+            if (argument == "--help" || argument == "-h") return 0;
+        }
+        return 2;
+    }
     // The game host owns its sinks: warnings/errors to stderr, everything else
     // silent unless --verbose, so a playing session is not drowned in log noise.
     auto& logger = bully::core::Logger::instance();
