@@ -15,6 +15,7 @@
 // Diagnostic codes: BULLY-RT-0001..0019
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <map>

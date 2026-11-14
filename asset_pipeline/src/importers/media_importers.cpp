@@ -1,8 +1,14 @@
 // Media importers: textures (image codec) and WAV audio.
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "bully/core/fs.h"
 #include "bully/core/strings.h"

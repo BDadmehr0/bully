@@ -16,6 +16,7 @@
 // Diagnostic codes: BULLY-EXP-0001..0029
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <string>

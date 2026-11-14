@@ -21,6 +21,13 @@ The suite is five executables registered with CTest:
 | `exporters` | `tests/test_exporters` | compiled asset → PNG/WAV/OBJ/JSON export and round-trip re-import |
 | `headless` | `tests/test_headless` | the CLI end-to-end in a scratch project |
 
+Two checks run alongside the suites:
+
+* `scripts/check_includes.py` - every source file includes the standard headers
+  it uses (see [building.md](building.md) for why this is enforced).
+* the `bully_header_check` target - one translation unit per public header, so
+  each header is proven self-contained.
+
 ```console
 $ ctest --preset headless
     Start 1: core

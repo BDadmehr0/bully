@@ -1,9 +1,15 @@
 #include "bully/core/uuid.h"
 
 #include <algorithm>
+#include <array>
 #include <atomic>
+#include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <random>
+#include <string>
+#include <string_view>
+#include <utility>
 
 #include "bully/core/strings.h"
 

@@ -8,10 +8,13 @@
 //
 // into a valid .bmodel using the host's public format library (which the sample
 // links against; third-party plugins may equally implement their own writer).
+#include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "bully/formats/model.h"

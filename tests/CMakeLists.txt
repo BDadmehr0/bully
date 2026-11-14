@@ -80,6 +80,48 @@ add_executable(test_runtime
 target_link_libraries(test_runtime PRIVATE bully_test_support bully_runtime bully_formats)
 add_test(NAME runtime COMMAND test_runtime)
 
+# --- public header self-containment -----------------------------------------
+# One tiny translation unit per public header, each including exactly one header
+# and nothing else. A header that forgets a standard include then fails here,
+# with the error pointing at the header itself, instead of failing later on a
+# newer toolchain that stopped providing the include transitively.
+#
+# The failure mode is real: with libstdc++ from GCC 16 the <cstdint> and
+# <algorithm> includes that used to arrive via <string>/<vector> disappeared,
+# and the whole project stopped compiling on the new compiler while still
+# building fine on the old one.
+#
+# Compiled with -Werror regardless of the preset: this target exists to fail.
+# Every installed/public header, including the plugin C ABI in plugins/sdk.
+file(GLOB_RECURSE _public_headers CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/../*/*/include/bully/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../*/include/bully/*.h")
+
+set(_header_tus)
+set(_header_dir "${CMAKE_CURRENT_BINARY_DIR}/header_checks")
+file(MAKE_DIRECTORY "${_header_dir}")
+foreach(_header ${_public_headers})
+    file(RELATIVE_PATH _rel "${CMAKE_CURRENT_SOURCE_DIR}/.." "${_header}")
+    string(MAKE_C_IDENTIFIER "${_rel}" _stem)
+    set(_tu "${_header_dir}/${_stem}.cpp")
+    file(WRITE "${_tu}"
+        "// Generated self-containment check: this header must compile alone.\n"
+        "#include \"${_rel}\"\n")
+    list(APPEND _header_tus "${_tu}")
+endforeach()
+list(LENGTH _header_tus _header_count)
+message(STATUS "  header checks     : ${_header_count} public headers")
+
+add_library(bully_header_check OBJECT ${_header_tus})
+target_link_libraries(bully_header_check PRIVATE bully_core bully_formats bully_pipeline
+    bully_project bully_plugins bully_exporters bully_runtime bully_templates)
+target_include_directories(bully_header_check PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/..            # so TUs can use repo-relative paths
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/sdk/include)
+if(NOT MSVC)
+    target_compile_options(bully_header_check PRIVATE -Werror -Wno-unused-function)
+endif()
+
 # --- headless QA dashboard over a scaffolded project -------------------------
 add_executable(test_headless qa/test_headless.cpp)
 target_link_libraries(test_headless PRIVATE bully_test_support bully_pipeline

@@ -1,6 +1,12 @@
 #include "bully/plugins/bridge.h"
 
+#include <cstddef>
+#include <cstdint>
 #include <functional>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "bully/core/log.h"
 

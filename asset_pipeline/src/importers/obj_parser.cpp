@@ -10,10 +10,15 @@
 // Unsupported records (s, l, p, free-form) are reported as warnings rather
 // than silently dropped, matching the "no silent import failures" rule.
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <map>
 #include <sstream>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 #include "bully/core/strings.h"
 #include "bully/pipeline/importer.h"

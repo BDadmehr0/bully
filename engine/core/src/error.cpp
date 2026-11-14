@@ -1,6 +1,11 @@
 #include "bully/core/error.h"
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <string>
+#include <string_view>
+#include <utility>
 
 namespace bully::core {
 

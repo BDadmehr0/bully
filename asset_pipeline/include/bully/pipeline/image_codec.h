@@ -15,6 +15,7 @@
 // silently. Diagnostic codes: BULLY-IMG-0001..0049
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <string_view>

@@ -1,5 +1,10 @@
 // Wavefront OBJ importer: OBJ + MTL -> .bmodel
+#include <cstddef>
 #include <filesystem>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "bully/core/fs.h"
 #include "bully/core/strings.h"

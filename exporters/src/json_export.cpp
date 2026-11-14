@@ -1,5 +1,9 @@
 // Authoring-JSON exporters: compiled assets -> the same JSON shape the
 // importers accept, so an export/import cycle is lossless for authored content.
+
+#include <cstdint>
+#include <string>
+#include <utility>
 #include "bully/core/json.h"
 #include "bully/exporters/exporters.h"
 

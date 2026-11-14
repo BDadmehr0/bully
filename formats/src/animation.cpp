@@ -2,7 +2,12 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "bully/core/json.h"
 

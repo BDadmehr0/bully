@@ -10,6 +10,7 @@
 // Diagnostic codes: BULLY-JSON-0001..0009
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <map>
 #include <type_traits>

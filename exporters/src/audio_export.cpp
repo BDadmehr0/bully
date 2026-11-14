@@ -1,4 +1,8 @@
 // Audio exporter: .baudio -> 16-bit PCM RIFF/WAVE.
+
+#include <cstdint>
+#include <utility>
+#include <vector>
 #include "bully/core/fs.h"
 #include "bully/exporters/exporters.h"
 

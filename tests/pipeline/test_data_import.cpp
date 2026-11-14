@@ -1,5 +1,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <string>
+#include <utility>
 
 #include "bully/formats/animation.h"
 #include "bully/formats/dialogue.h"

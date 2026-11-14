@@ -2,8 +2,17 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <ctime>
+#include <filesystem>
+#include <functional>
+#include <optional>
 #include <set>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 #include "bully/core/fs.h"
 #include "bully/core/log.h"

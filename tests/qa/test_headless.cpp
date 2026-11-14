@@ -2,6 +2,7 @@
 // scaffolded project the same way CI would, and verifies that the QA dashboard,
 // the build report and packaging all work without the Qt studio.
 #include <catch2/catch_test_macros.hpp>
+#include <filesystem>
 
 #include <array>
 #include <utility>

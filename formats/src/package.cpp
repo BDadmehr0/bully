@@ -1,7 +1,13 @@
 #include "bully/formats/package.h"
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <set>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 #include "bully/core/json.h"
 #include "bully/core/strings.h"

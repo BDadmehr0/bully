@@ -12,7 +12,14 @@ endif()
 
 if(SQLite3_FOUND)
     add_library(bully_sqlite3 INTERFACE)
-    target_link_libraries(bully_sqlite3 INTERFACE SQLite::SQLite3)
+    # CMake renamed this imported target: SQLite3::SQLite3 is current, and
+    # SQLite::SQLite3 is deprecated (it warns on every configure with new
+    # CMake versions). Prefer the modern name and fall back for old packages.
+    if(TARGET SQLite3::SQLite3)
+        target_link_libraries(bully_sqlite3 INTERFACE SQLite3::SQLite3)
+    else()
+        target_link_libraries(bully_sqlite3 INTERFACE SQLite::SQLite3)
+    endif()
     message(STATUS "  sqlite3           : system (${SQLite3_VERSION})")
 else()
     add_library(bully_sqlite3 STATIC sqlite/sqlite3.c)

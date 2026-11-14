@@ -1,4 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
+#include <cstdint>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "bully/formats/texture.h"
 #include "bully/pipeline/builtin_importers.h"

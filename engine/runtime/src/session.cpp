@@ -1,5 +1,9 @@
 #include "bully/runtime/session.h"
 
+#include <cstdint>
+#include <map>
+#include <string>
+#include <string_view>
 #include <utility>
 
 #include "bully/core/json.h"

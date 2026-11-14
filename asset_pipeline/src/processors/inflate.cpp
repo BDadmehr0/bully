@@ -4,7 +4,12 @@
 // fixed-Huffman and dynamic-Huffman blocks, and reports structural errors as
 // diagnostics instead of reading out of bounds.
 #include <array>
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "bully/pipeline/image_codec.h"
 

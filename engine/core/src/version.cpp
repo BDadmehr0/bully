@@ -1,3 +1,8 @@
+
+#include <cstddef>
+#include <cstdint>
+#include <string>
+#include <string_view>
 #include "bully/core/version.h"
 
 #include "bully/core/strings.h"

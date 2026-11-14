@@ -1,7 +1,14 @@
 #include "bully/plugins/manifest.h"
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <cstdlib>
+#include <filesystem>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 #include "bully/core/fs.h"
 #include "bully/core/strings.h"

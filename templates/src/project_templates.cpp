@@ -1,3 +1,9 @@
+
+#include <filesystem>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 #include "bully/templates/project_templates.h"
 
 #include "bully/core/fs.h"

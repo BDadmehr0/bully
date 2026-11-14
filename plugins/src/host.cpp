@@ -1,9 +1,18 @@
 #include "bully/plugins/host.h"
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <map>
+#include <memory>
 #include <set>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 #include <dlfcn.h>
 

@@ -2,6 +2,13 @@
 
 #include <algorithm>
 #include <charconv>
+#include <cstddef>
+#include <cstdint>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 #include "bully/core/json.h"
 #include "bully/core/log.h"

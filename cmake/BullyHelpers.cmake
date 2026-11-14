@@ -12,21 +12,26 @@ function(bully_setup_warnings)
     if(MSVC)
         add_compile_options(/W4 /permissive-)
     else()
+        # C warnings every language understands.
         add_compile_options(
             -Wall -Wextra -Wpedantic
-            -Wshadow
-            -Wnon-virtual-dtor
-            -Wold-style-cast
-            -Wcast-align
             -Wunused
-            -Woverloaded-virtual
-            -Wconversion
-            -Wsign-conversion
-            -Wdouble-promotion
             -Wformat=2
             -Wimplicit-fallthrough)
+        # C++-only warnings: applying these to C sources (the vendored SQLite
+        # amalgamation) makes the compiler emit "valid for C++ but not for C"
+        # notes, which is pure noise. Generator expressions scope them by language.
+        add_compile_options(
+            $<$<COMPILE_LANGUAGE:CXX>:-Wshadow>
+            $<$<COMPILE_LANGUAGE:CXX>:-Wnon-virtual-dtor>
+            $<$<COMPILE_LANGUAGE:CXX>:-Wold-style-cast>
+            $<$<COMPILE_LANGUAGE:CXX>:-Wcast-align>
+            $<$<COMPILE_LANGUAGE:CXX>:-Woverloaded-virtual>
+            $<$<COMPILE_LANGUAGE:CXX>:-Wconversion>
+            $<$<COMPILE_LANGUAGE:CXX>:-Wsign-conversion>
+            $<$<COMPILE_LANGUAGE:CXX>:-Wdouble-promotion>)
         if(BULLY_WARNINGS_AS_ERRORS)
-            add_compile_options(-Werror)
+            add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Werror>)
         endif()
         if(BULLY_ENABLE_SANITIZERS)
             add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)

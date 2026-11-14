@@ -1,3 +1,8 @@
+
+#include <cstdint>
+#include <string>
+#include <string_view>
+#include <vector>
 #include "bully/formats/registry.h"
 
 #include "bully/core/strings.h"

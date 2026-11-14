@@ -1,4 +1,10 @@
 #include <algorithm>
+#include <cstddef>
+#include <memory>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 #include "bully/core/log.h"
 #include "bully/core/strings.h"

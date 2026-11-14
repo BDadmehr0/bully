@@ -1,5 +1,11 @@
 // Exporter registry + the file-level dispatcher used by the CLI and Studio.
+#include <cstdint>
 #include <cstdio>
+#include <filesystem>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 #include "bully/core/fs.h"
 #include "bully/core/strings.h"

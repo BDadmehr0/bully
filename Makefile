@@ -8,6 +8,7 @@
 #   make setup         install dependencies (Arch Linux)
 #   make configure     configure ./build (Debug, full build)
 #   make build         incremental build
+#   make check         include-hygiene and API checks (no build required)
 #   make test          fast test suite
 #   make test-all      test suite + QA over examples/
 #   make editor        build and launch the Studio GUI
@@ -41,6 +42,7 @@ help:
 	@echo "  make run          build and launch the example game"
 	@echo "  make test         fast unit/integration suite"
 	@echo "  make test-all     suite + QA over examples/ projects"
+	@echo "  make check        standard-include hygiene checks"
 	@echo "  make package      build a .bpackage from $(EXAMPLE)"
 	@echo "  make clean        remove $(BUILD_DIR)/"
 	@echo "  make docs         print the documentation index"
@@ -67,7 +69,16 @@ run: build
 	@test -x $(BUILD_DIR)/apps/game/bully_game || { echo "Game was not built (needs SDL3: -DBULLY_BUILD_RUNTIME=ON)"; exit 1; }
 	$(BUILD_DIR)/apps/game/bully_game $(EXAMPLE)/project.bullyproj
 
+# check/format were referenced in .PHONY but never defined.
+check:
+	python3 scripts/check_includes.py
+
+format:
+	@echo "clang-format is not required to build; run it manually if installed:"
+	@echo "  clang-format --dry-run --Werror \$$(git ls-files '*.cpp' '*.h')"
+
 test: build
+	python3 scripts/check_includes.py
 	$(CTEST) --test-dir $(BUILD_DIR) --output-on-failure
 
 # test-all additionally runs the QA dashboard over every example project, so a

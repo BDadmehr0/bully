@@ -1,6 +1,7 @@
 // Bully Studio - small string utilities shared by every module.
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <string_view>

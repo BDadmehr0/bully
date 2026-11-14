@@ -12,13 +12,16 @@
 // asset sets. This keeps the first implementation honest and testable.
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
+#include <filesystem>
 #include <functional>
 #include <map>
 #include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "bully/core/error.h"

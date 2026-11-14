@@ -2,7 +2,12 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstdint>
 #include <ctime>
+#include <filesystem>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "bully/core/fs.h"
 #include "bully/core/strings.h"

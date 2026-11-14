@@ -1,6 +1,11 @@
 // Texture exporters: .btexture -> RGBA8 -> PNG / PPM.
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "bully/core/fs.h"
 #include "bully/formats/binary.h"

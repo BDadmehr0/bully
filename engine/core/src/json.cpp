@@ -2,8 +2,13 @@
 
 #include <charconv>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <string>
+#include <string_view>
+#include <utility>
 
 #include "bully/core/fs.h"
 #include "bully/core/strings.h"

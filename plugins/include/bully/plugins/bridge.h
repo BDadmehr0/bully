@@ -5,6 +5,7 @@
 // requires no host code changes at all.
 #pragma once
 
+#include <cstddef>
 #include <memory>
 #include <vector>
 #include <string>

@@ -1,9 +1,18 @@
 #include "bully/runtime/asset_database.h"
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
+#include <filesystem>
+#include <map>
+#include <memory>
+#include <optional>
 #include <set>
+#include <string>
+#include <string_view>
 #include <utility>
+#include <vector>
 
 #include "bully/core/fs.h"
 #include "bully/formats/binary.h"

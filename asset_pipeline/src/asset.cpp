@@ -1,6 +1,11 @@
 #include "bully/pipeline/asset.h"
 
+#include <cstdint>
 #include <cstdlib>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 #include "bully/core/fs.h"
 #include "bully/core/strings.h"

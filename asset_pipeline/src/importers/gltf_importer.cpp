@@ -10,10 +10,16 @@
 //     importer, which reuses this parser through the shared gltf module)
 // Unsupported extensions are reported as warnings, never silently ignored.
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <filesystem>
 #include <functional>
 #include <map>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "bully/core/fs.h"
 #include "bully/core/json.h"

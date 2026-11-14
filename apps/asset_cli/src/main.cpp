@@ -15,9 +15,16 @@
 //   formats                       print the runtime format table
 //   verify <file>                 validate a compiled asset file
 //   plugins [dir]                 list plugins found in a directory
+#include <algorithm>
+#include <cstddef>
 #include <cstdio>
+#include <filesystem>
 #include <iostream>
+#include <memory>
+#include <optional>
 #include <string>
+#include <string_view>
+#include <utility>
 #include <vector>
 
 #include "bully/core/fs.h"

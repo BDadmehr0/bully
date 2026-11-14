@@ -1,4 +1,8 @@
+#include <algorithm>
 #include <catch2/catch_test_macros.hpp>
+#include <memory>
+#include <string>
+#include <string_view>
 
 #include "bully/pipeline/qa.h"
 #include "fixture.h"

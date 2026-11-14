@@ -1,10 +1,16 @@
 #include "importers/model_builder.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <map>
 #include <filesystem>
+#include <string>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include "bully/core/json.h"
 #include "bully/core/strings.h"

@@ -11,7 +11,38 @@ sudo pacman -S --needed sdl3 mesa
 ```
 
 SQLite and Catch2 have vendored fallbacks, so the headless build needs only a
-compiler, CMake and Ninja. Qt 6 and SDL3 are optional: without them the Studio
+compiler, CMake and Ninja.
+
+## Compiler support
+
+The project targets C++20 and is built with `-Werror` under the `headless`
+preset. It is expected to build warning-free on:
+
+| Toolchain | Status |
+|---|---|
+| GCC 12 (Debian bookworm) | verified |
+| GCC 16 | supported; drives the include-hygiene rules below |
+| Clang 15+ | supported |
+
+Every source file includes the standard headers it uses **explicitly**. This is
+not stylistic: C++ code that relies on transitive includes compiles fine until a
+newer standard library drops one, and then the whole project breaks on a new
+toolchain while still building on the old one. That is what happened with GCC
+16, where `<string>` stopped providing `<cstdint>` and `<vector>` stopped
+providing `<algorithm>`, so `std::uint32_t` and `std::remove_if` stopped
+resolving.
+
+Two guards keep this from coming back:
+
+* `scripts/check_includes.py` (`make check`) greps every source file for `std::`
+  facilities used without the corresponding `#include`, and fails if any file is
+  missing one. `--apply` fixes them in place.
+* The `bully_header_check` CMake target compiles **one translation unit per
+  public header**, each including exactly that header and nothing else, with
+  `-Werror`. A header that forgets an include fails there, pointing at the
+  header rather than at a confused downstream file.
+
+Both run as part of `make test`. Qt 6 and SDL3 are optional: without them the Studio
 shell and the *windowed* game host are skipped, and everything else - including
 `bully_game --headless` - still builds and is tested.
 

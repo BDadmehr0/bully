@@ -8,7 +8,13 @@
 // The JSON schemas are documented in docs/formats/ and are the contract between
 // the Studio editors and the pipeline. Structural validation is delegated to the
 // compiled document types, so an editor and the CLI agree on what is valid.
+#include <cstddef>
+#include <cstdint>
 #include <filesystem>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "bully/core/fs.h"
 #include "bully/core/json.h"

@@ -1,9 +1,17 @@
 #include "test_support.h"
 
+#include <algorithm>
 #include <atomic>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
+#include <filesystem>
 #include <random>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 #include "bully/core/json.h"
 

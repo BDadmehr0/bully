@@ -1,8 +1,14 @@
 // Image decoding: PNG (via the in-tree inflate), BMP, TGA, PPM.
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <sstream>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 #include "bully/core/strings.h"
 #include "bully/pipeline/image_codec.h"

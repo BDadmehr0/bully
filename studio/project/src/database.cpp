@@ -1,6 +1,12 @@
 #include "bully/project/database.h"
 
+#include <cstddef>
 #include <cstdint>
+#include <filesystem>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 #include <sqlite3.h>
 

@@ -3,6 +3,11 @@
 #pragma once
 
 #include <catch2/catch_test_macros.hpp>
+#include <cstdint>
+#include <optional>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 #include <filesystem>
 #include <memory>

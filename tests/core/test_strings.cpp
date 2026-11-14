@@ -1,4 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
+#include <cstdint>
+#include <string>
+#include <vector>
 
 #include "bully/core/strings.h"
 

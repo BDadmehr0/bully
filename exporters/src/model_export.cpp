@@ -1,5 +1,8 @@
 // Model exporter: .bmodel -> Wavefront OBJ (+ MTL).
+#include <cstddef>
 #include <cstdio>
+#include <string>
+#include <utility>
 
 #include "bully/exporters/exporters.h"
 

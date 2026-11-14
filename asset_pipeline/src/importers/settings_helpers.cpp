@@ -1,3 +1,8 @@
+
+#include <cstdint>
+#include <string>
+#include <utility>
+#include <vector>
 #include "bully/pipeline/importer.h"
 
 namespace bully::pipeline::settings {

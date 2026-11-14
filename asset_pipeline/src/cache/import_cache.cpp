@@ -1,6 +1,13 @@
 #include "bully/pipeline/import_cache.h"
 
 #include <chrono>
+#include <cstdint>
+#include <filesystem>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 #include "bully/core/fs.h"
 #include "bully/pipeline/asset.h"

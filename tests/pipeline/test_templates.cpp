@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <string>
 
 #include "bully/pipeline/builtin_importers.h"
 #include "bully/pipeline/import_cache.h"

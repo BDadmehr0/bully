@@ -8,6 +8,7 @@
 // Diagnostic codes: BULLY-RT-0100..0119
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <map>
 #include <optional>

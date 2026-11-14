@@ -26,6 +26,7 @@
 // Diagnostic codes: BULLY-BIN-0001..0019
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <map>

@@ -6,7 +6,9 @@
 // they mirror docs/retro-presets.md.
 #pragma once
 
+#include <cstdint>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "bully/formats/model.h"

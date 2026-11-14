@@ -1,4 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
+#include <filesystem>
+#include <string>
+#include <utility>
 
 #include "bully/runtime/asset_database.h"
 #include "test_support.h"

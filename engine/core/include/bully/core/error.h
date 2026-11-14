@@ -6,6 +6,8 @@
 // human-readable message, so the QA dashboard can aggregate them.
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
 #include <string>
 #include <string_view>
 #include <utility>
