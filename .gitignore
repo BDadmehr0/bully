@@ -6,9 +6,12 @@ compile_commands.json
 # Per-project build products, caches and databases are generated, never
 # committed (examples/ and templates/ ship sources only).
 project.db
+project.db-journal
+project.db-wal
+project.db-shm
 .bully-cache/
-built/
-packages/*.bpackage
-packages/*.manifest.json
-reports/*.md
-reports/*.json
+**/built/
+**/packages/*.bpackage
+**/packages/*.manifest.json
+**/reports/
+exported/
