@@ -1,0 +1,42 @@
+{
+  "name": "xbox",
+  "display_name": "Xbox (2001)",
+  "description": "Bigger budgets than the PS2 generation: multi-pass shaders, 512x512 textures, per-pixel lighting and higher polygon counts.",
+  "version": "1.0.0",
+  "model": {
+    "triangle_budget_per_character": 8000,
+    "triangle_budget_per_scene": 400000,
+    "max_bones_per_mesh": 64,
+    "generate_lods": true,
+    "lod_count": 3,
+    "lod_triangle_ratios": [1.0, 0.55, 0.3],
+    "bake_vertex_lighting": false,
+    "weld_vertices": true
+  },
+  "texture": {
+    "max_size": 512,
+    "pixel_format": "rgba8",
+    "generate_mips": true,
+    "sampler": "linear",
+    "wrap": "repeat",
+    "atlas_max_size": 1024
+  },
+  "material": {
+    "shader_preset": "retro.phong",
+    "alpha_cutoff": 0.5,
+    "allow_per_pixel_lighting": true
+  },
+  "audio": {
+    "sample_rate": 44100,
+    "channels": 2,
+    "codec": "pcm16",
+    "max_voices": 64
+  },
+  "render": {
+    "resolution": [640, 480],
+    "progressive": true,
+    "colour_depth": 32,
+    "dither": false,
+    "fog": true
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "schoolyard",
+  "environment": {"fog_enabled": true, "fog_start": 40.0, "fog_end": 160.0, "time_of_day": 14.0},
+  "entities": [
+    {"id": "ent.crate_01", "name": "Crate 01", "model": "crate",
+     "position": [0.0, 5.0, 0.0], "static": true}
+  ],
+  "lights": [
+    {"id": "light.sun", "type": 0, "intensity": 1.2, "position": [40.0, 60.0, 20.0], "baked": false}
+  ],
+  "triggers": [
+    {"id": "trg.intro_mission", "kind": "mission", "once": true,
+     "payload": {"mission": "m_first_day"}}
+  ],
+  "spawns": [
+    {"id": "spawn.player_start", "kind": "player"},
+    {"id": "spawn.gary", "kind": "npc"}
+  ]
+}

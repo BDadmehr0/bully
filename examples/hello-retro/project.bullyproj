@@ -1,0 +1,21 @@
+{
+  "format": "bully-project",
+  "format_version": "1.0.0",
+  "name": "hello-retro",
+  "engine_version": "0.1.0",
+  "template": "retro-action",
+  "target_platform": "linux-x86_64",
+  "retro_preset": "ps2",
+  "default_language": "en",
+  "content_version": "0.1.0",
+  "build_profile": "release",
+  "runtime_modules": [
+    "renderer",
+    "scene",
+    "physics",
+    "animation",
+    "audio",
+    "gameplay",
+    "dialogue"
+  ]
+}

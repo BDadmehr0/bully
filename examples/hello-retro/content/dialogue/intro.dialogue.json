@@ -1,0 +1,53 @@
+{
+  "name": "intro",
+  "language": "en",
+  "entry_node": "n_greet",
+  "characters": [
+    {"id": "chr.player", "name": "Jimmy", "voice_actor": "actor.player", "color": "#4FA3D1"},
+    {"id": "chr.gary", "name": "Gary", "voice_actor": "actor.gary", "color": "#D14F4F"}
+  ],
+  "lines": [
+    {
+      "id": "dlg.intro.gary.001",
+      "character": "chr.gary",
+      "text": "Nice outfit. Did your mom pick it?",
+      "delivery": 5,
+      "audio_start": 0.0,
+      "audio_end": 2.4,
+      "selected_take": "t01",
+      "takes": [
+        {"id": "t01", "voice_actor": "actor.gary", "start": 0.0, "end": 2.4,
+         "selected": true, "notes": "placeholder timing - record before shipping"}
+      ],
+      "next": "n_choice"
+    },
+    {
+      "id": "dlg.intro.jimmy.001",
+      "character": "chr.player",
+      "text": "Whatever, Gary.",
+      "audio_start": 2.4,
+      "audio_end": 3.6
+    },
+    {
+      "id": "dlg.intro.jimmy.002",
+      "character": "chr.player",
+      "text": "You'll get yours.",
+      "audio_start": 3.6,
+      "audio_end": 5.0
+    }
+  ],
+  "nodes": [
+    {"id": "n_greet", "kind": 0, "line": "dlg.intro.gary.001", "next": "n_choice"},
+    {
+      "id": "n_choice",
+      "kind": 1,
+      "branches": [
+        {"label": "Ignore him", "target": "n_ignore"},
+        {"label": "Threaten him", "target": "n_threaten"}
+      ]
+    },
+    {"id": "n_ignore", "kind": 0, "line": "dlg.intro.jimmy.001", "next": "n_end"},
+    {"id": "n_threaten", "kind": 0, "line": "dlg.intro.jimmy.002", "next": "n_end"},
+    {"id": "n_end", "kind": 5}
+  ]
+}
