@@ -19,7 +19,8 @@ The suite is five executables registered with CTest:
 | `plugins` | `tests/test_plugins` | the real plugin host: discovery, ABI check, load, import, QA, unload |
 | `runtime` | `tests/test_runtime` | asset database mounts, story state, clock and input map |
 | `exporters` | `tests/test_exporters` | compiled asset → PNG/WAV/OBJ/JSON export and round-trip re-import |
-| `headless` | `tests/test_headless` | the CLI end-to-end in a scratch project |
+| `headless` | `tests/test_headless` | the CLI and game host end-to-end in a scratch project |
+| `launcher` | `tests/qa/test_launcher.py` | `scripts/run_game.py`: dry run, auto-build, package run, usage errors |
 
 Build and run the `asan` preset as well when changing anything that handles raw
 byte buffers. Two real bugs (an out-of-bounds read in mip generation and a

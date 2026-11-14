@@ -11,6 +11,7 @@
 // bug is reproduced in CI without a display. Rendering is the only thing it
 // skips.
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>

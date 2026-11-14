@@ -87,6 +87,22 @@ a `CTestTestfile.cmake` there so that mistake is a hard error too.
 Note the `debug` and `release` presets share `build/` while `headless` uses
 `build/headless/`; `make` uses `build/` by default.
 
+## Running a project
+
+`scripts/run_game.py` wraps "build the assets, then run the game" and needs only
+Python 3:
+
+```sh
+python3 scripts/run_game.py --list
+python3 scripts/run_game.py --headless --frames 300
+python3 scripts/run_game.py mygame --headless
+```
+
+It locates the build tree itself (`build/headless`, `build`, `build/debug`, ...),
+builds assets when none are present, forwards `--headless/--frames/--delta/--scene`,
+and returns 0 ran / 1 failed / 2 usage error. `--dry-run` prints the exact
+commands without running them. Covered by the `launcher` ctest case.
+
 ## Sanitizers and container assertions
 
 Debug builds define `_GLIBCXX_ASSERTIONS` by default (`-DBULLY_STL_ASSERTIONS=OFF`

@@ -48,6 +48,23 @@ Or with the Makefile: `make`, `make test`, `make test-all`, `make play`, `make r
 `project.bullyproj`) or a built `.bpackage`, and needs the project to be built
 first - it runs compiled assets, it does not compile them.
 
+The quickest way is the launcher, which finds the build tree, compiles the
+project's assets if they are missing and then runs the game:
+
+```sh
+python3 scripts/run_game.py                          # examples/hello-retro, windowed
+python3 scripts/run_game.py --headless --frames 300   # no window
+python3 scripts/run_game.py mygame --headless         # any project
+python3 scripts/run_game.py mygame/packages/mygame.bpackage
+python3 scripts/run_game.py --list                    # what can be run?
+python3 scripts/run_game.py --headless -n             # dry run: show the commands
+```
+
+It needs only Python 3 (no packages) and forwards every game flag. `make launcher`
+does the same thing.
+
+Or call the binaries directly:
+
 ```sh
 BIN=build/headless/apps/game/bully_game
 

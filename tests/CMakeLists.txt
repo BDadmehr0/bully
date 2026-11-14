@@ -140,6 +140,20 @@ if(TARGET bully_game)
 endif()
 add_dependencies(test_headless bully_asset_cli)
 add_test(NAME headless COMMAND test_headless)
+
+# The convenience launcher (scripts/run_game.py) is part of the documented
+# workflow, so it gets the same end-to-end treatment: --list, --dry-run, a real
+# headless run and its usage errors.
+find_program(BULLY_PYTHON3 NAMES python3 python)
+if(BULLY_PYTHON3 AND TARGET bully_game)
+    add_test(NAME launcher
+        COMMAND ${BULLY_PYTHON3}
+                ${CMAKE_SOURCE_DIR}/tests/qa/test_launcher.py
+                --repo ${CMAKE_SOURCE_DIR}
+                --game $<TARGET_FILE:bully_game>
+                --cli $<TARGET_FILE:bully_asset_cli>)
+    set_tests_properties(launcher PROPERTIES TIMEOUT 120)
+endif()
 endif()
 
 # Third-party headers and test scaffolding legitimately produce unused helpers.

@@ -14,6 +14,7 @@
 #   make editor        build and launch the Studio GUI
 #   make run           build assets and launch the example game
 #   make play          run the example headless for PLAY_FRAMES frames
+#   make launcher      build-then-run via scripts/run_game.py (ARGS=...)
 #   make package       package the example project
 #   make clean         remove ./build
 
@@ -31,7 +32,7 @@ EXAMPLE     ?= examples/hello-retro
 # Presets: debug (default), headless, release, asan - see CMakePresets.json
 PRESET      ?= debug
 
-.PHONY: help setup configure build editor run play test test-all package clean docs format check
+.PHONY: help setup configure build editor run play launcher test test-all package clean docs format check
 
 help:
 	@echo "Bully Studio build targets"
@@ -43,6 +44,7 @@ help:
 	@echo "  make run          build and launch the example game"
 	@echo "  make test         fast unit/integration suite"
 	@echo "  make play         run the example headless (PLAY_FRAMES=600)"
+	@echo "  make launcher     build-then-run with scripts/run_game.py (ARGS=...)"
 	@echo "  make test-all     suite + QA over examples/ projects"
 	@echo "  make check        standard-include hygiene checks"
 	@echo "  make package      build a .bpackage from $(EXAMPLE)"
@@ -79,6 +81,12 @@ PLAY_FRAMES ?= 600
 play: build
 	$(CLI) build --project $(EXAMPLE)
 	$(BUILD_DIR)/apps/game/bully_game $(EXAMPLE) --headless --frames $(PLAY_FRAMES)
+
+# The friendlier launcher: finds the build tree, builds assets if needed, runs.
+# Pass any bully_game flag through, e.g. `make launcher ARGS="--frames 60"`.
+ARGS ?=
+launcher: build
+	python3 scripts/run_game.py $(if $(ARGS),$(ARGS),--headless --frames 120)
 
 # check/format were referenced in .PHONY but never defined.
 check:
