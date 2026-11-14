@@ -149,6 +149,32 @@ def main() -> int:
         check("window possible" in result.stdout or "SDL_Init" in result.stdout,
               "--diagnose says whether a window is possible")
 
+        print("--doctor reports the environment")
+        result = launcher.run("--doctor")
+        check(result.returncode in (0, 1), f"--doctor exits 0 or 1 (got {result.returncode})")
+        check("environment check" in result.stdout, "--doctor prints a report")
+        check("binary age" in result.stdout, "--doctor reports binary freshness")
+        check("--diagnose" in result.stdout, "--doctor checks the binary's --diagnose support")
+
+        print("stale-binary detection")
+        # Touch a source so it is newer than the binary; the launcher must say so
+        # (this exact situation produced "unknown option --diagnose" in the field).
+        source = args.repo / "apps" / "game" / "src" / "main.cpp"
+        if source.is_file():
+            import os as _os
+            import time as _time
+            original = source.stat().st_mtime
+            try:
+                _os.utime(source, (original + 120, original + 120))
+                result = launcher.run(str(project), "--headless", "--frames", "2", "--yes")
+                check(result.returncode == 0, "run still works with a stale binary")
+                check("older than" in result.stderr or "older than" in result.stdout,
+                      "warns that the binary is older than the sources")
+                doctor = launcher.run("--doctor")
+                check("STALE" in doctor.stdout, "--doctor flags the stale binary")
+            finally:
+                _os.utime(source, (original, original))
+
         print("no build tree")
         result = launcher.run(
             str(project), "--headless", "--build-dir", str(Path(temporary) / "nope")

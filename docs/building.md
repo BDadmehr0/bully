@@ -98,6 +98,11 @@ python3 scripts/run_game.py --headless --frames 300
 python3 scripts/run_game.py mygame --headless
 ```
 
+`python3 scripts/run_game.py --doctor` prints one page describing the checkout
+(git revision, uncommitted changes), whether the game binary is older than the
+sources, and what the video stack can do - the first thing to check when the
+executable behaves like older code.
+
 It locates the build tree itself (`build/headless`, `build`, `build/debug`, ...),
 builds assets when none are present, forwards `--headless/--frames/--delta/--scene`,
 and returns 0 ran / 1 failed / 2 usage error. `--dry-run` prints the exact

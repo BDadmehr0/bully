@@ -60,6 +60,33 @@ BUILD_CANDIDATES = [
 ]
 
 
+# ---------------------------------------------------------------- prompting --
+def _can_prompt() -> bool:
+    """True when an interactive answer is possible.
+
+    `isatty()` alone is too strict (it rejects `echo y | script`), and using
+    input() on a closed stdin raises EOFError. Asking only when stdin is open
+    keeps scripted use from hanging or crashing.
+    """
+    try:
+        return sys.stdin is not None and not sys.stdin.closed
+    except (AttributeError, ValueError):  # pragma: no cover - exotic stdin
+        return False
+
+
+def _ask(prompt: str, default: str = "y") -> str:
+    """Reads one line, treating EOF as the default answer."""
+    try:
+        sys.stdout.write(prompt)
+        sys.stdout.flush()
+        line = sys.stdin.readline()
+    except (EOFError, OSError, ValueError):  # pragma: no cover - closed stdin
+        return default
+    if not line:
+        return default
+    return line.strip().lower()
+
+
 # --------------------------------------------------------------------- output --
 def _supports_colour() -> bool:
     return sys.stdout.isatty() and os.environ.get("NO_COLOR") is None
@@ -114,6 +141,43 @@ def find_executable(name: str, build_dir: Path | None) -> Path | None:
                 if path.is_file() and os.access(path, os.X_OK):
                     return path
     return None
+
+
+def binary_is_stale(game: Path, build_dir: Path | None = None) -> str | None:
+    """Returns a description of the newest source newer than `game`, or None.
+
+    A stale binary is the most confusing failure this project has produced: the
+    executable predates the source, so it answers "unknown option --diagnose"
+    or aborts in code that was already fixed. It is invisible otherwise because
+    nothing recompiles on `ctest`/`run_game.py` - only `cmake --build` does.
+    """
+    try:
+        built_at = game.stat().st_mtime
+    except OSError:  # pragma: no cover - unreadable binary
+        return None
+
+    roots = [REPO_ROOT / name for name in ("apps", "engine", "formats", "asset_pipeline",
+                                           "exporters", "plugins", "studio", "templates")]
+    newest_path: Path | None = None
+    newest_time = built_at
+    for root in roots:
+        if not root.is_dir():
+            continue
+        for path in root.rglob("*"):
+            if path.suffix not in (".cpp", ".h", ".hpp", ".cc"):
+                continue
+            if "build" in path.parts:
+                continue
+            try:
+                stamp = path.stat().st_mtime
+            except OSError:
+                continue
+            if stamp > newest_time:
+                newest_time = stamp
+                newest_path = path
+    if newest_path is None:
+        return None
+    return newest_path.relative_to(REPO_ROOT).as_posix()
 
 
 def configure_hint(ui: Ui) -> None:
@@ -300,6 +364,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--diagnose", action="store_true", help="report video/display state and exit"
     )
+    parser.add_argument(
+        "--doctor",
+        action="store_true",
+        help="check git state, build freshness and video support, then exit",
+    )
     parser.add_argument("--dry-run", "-n", action="store_true", help="show commands only")
     parser.add_argument("-v", "--debug", action="store_true", help="show commands")
     parser.add_argument("--quiet", "-q", action="store_true", help="minimal output")
@@ -307,6 +376,81 @@ def build_parser() -> argparse.ArgumentParser:
         "--yes", "-y", action="store_true", help="assume yes for prompts"
     )
     return parser
+
+
+def doctor(ui: Ui, build_dir: Path | None) -> int:
+    """Answers "is what I am running actually what I checked out?".
+
+    A stale build tree is the single most confusing failure mode here: the
+    binary predates the sources, so it rejects options that exist in the code or
+    crashes in paths that were already fixed. Everything that determines that is
+    printed in one place, with a verdict.
+    """
+    problems = 0
+    print("Bully Studio environment check")
+    print(f"  repository   : {REPO_ROOT}")
+    print(f"  python       : {sys.version.split()[0]}")
+
+    try:
+        head = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=REPO_ROOT, capture_output=True, text=True, check=False, timeout=10,
+        )
+        branch = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            cwd=REPO_ROOT, capture_output=True, text=True, check=False, timeout=10,
+        )
+        print(f"  git          : {branch.stdout.strip()} @ {head.stdout.strip()}")
+        dirty = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=REPO_ROOT, capture_output=True, text=True, check=False, timeout=10,
+        )
+        changed = len([line for line in dirty.stdout.splitlines() if line.strip()])
+        print(f"  git changes  : {changed} file(s) not committed")
+    except (OSError, subprocess.SubprocessError):  # pragma: no cover - no git
+        print("  git          : not available")
+
+    game = find_executable("bully_game", build_dir)
+    if game is None:
+        print("  game host    : NOT BUILT")
+        print()
+        configure_hint(ui)
+        return 2
+    print(f"  game host    : {game}")
+
+    stale = binary_is_stale(game, build_dir)
+    if stale is None:
+        print("  binary age   : up to date with the sources")
+    else:
+        problems += 1
+        print(f"  binary age   : STALE - {stale} is newer than the binary")
+        print("                 rebuild with: cmake --build --preset headless")
+
+    # Ask the binary itself what it supports; an old binary is missing flags.
+    diagnose = subprocess.run(
+        [str(game), "--diagnose"], capture_output=True, text=True, check=False, timeout=20
+    )
+    combined = (diagnose.stdout or "") + (diagnose.stderr or "")
+    if "video diagnostics" in combined:
+        print("  --diagnose   : supported")
+    else:
+        problems += 1
+        print("  --diagnose   : NOT supported by this binary (it is old)")
+        print(f"                 it said: {combined.strip().splitlines()[:1]}")
+    print("  video        :")
+    for line in combined.splitlines():
+        if line.strip() and not line.startswith("bully_game video"):
+            print(f"    {line.rstrip()}")
+
+    cli = find_executable("bully_asset_cli", build_dir)
+    print(f"  asset CLI    : {cli if cli else 'NOT BUILT'}")
+
+    print()
+    if problems:
+        print(f"{problems} problem(s) found - see above")
+        return 1
+    print("no problems found")
+    return 0
 
 
 def list_targets(ui: Ui) -> int:
@@ -363,6 +507,9 @@ def main(argv: list[str] | None = None) -> int:
     if arguments.list:
         return list_targets(ui)
 
+    if arguments.doctor:
+        return doctor(ui, arguments.build_dir)
+
     if arguments.diagnose:
         game = find_executable("bully_game", arguments.build_dir)
         if game is None:
@@ -379,6 +526,29 @@ def main(argv: list[str] | None = None) -> int:
         ui.error("bully_asset_cli not found in the build tree; cannot compile assets")
         ui.info("run with --no-build to launch anyway, or build the CLI target")
         return 2
+
+    stale = binary_is_stale(game, arguments.build_dir)
+    if stale is not None:
+        ui.warn(f"the game binary is older than {stale} - it may not have your changes")
+        ui.info("rebuild it (this is a build-time step, ctest/run_game.py do not compile):")
+        ui.info("  cmake --build --preset headless -j\"$(nproc)\"")
+        if arguments.dry_run:
+            ui.info("(dry run: continuing)")
+        elif not arguments.yes and _can_prompt():
+            answer = _ask("    rebuild now? [Y/n] ")
+            if answer in ("", "y", "yes"):
+                preset = "headless"
+                build_command = ["cmake", "--build", "--preset", preset, "-j"]
+                ui.step(f"rebuilding with preset {preset}")
+                if arguments.debug:
+                    ui.info(" ".join(build_command))
+                rebuild = subprocess.run(build_command, cwd=REPO_ROOT, check=False)
+                if rebuild.returncode != 0:
+                    ui.error("rebuild failed - see the output above")
+                    return 1
+                # `-j` without a count is accepted by CMake's build tool.
+        else:
+            ui.info("(--yes / non-interactive: continuing with the existing binary)")
 
     target, is_package = resolve_target(arguments.target, ui)
     ui.info(f"game host : {game}")
@@ -418,7 +588,7 @@ def main(argv: list[str] | None = None) -> int:
             if fall_back:
                 ui.info("(--yes / non-interactive: falling back to --headless)")
             else:
-                answer = input("    run headless instead? [Y/n] ").strip().lower()
+                answer = _ask("    run headless instead? [Y/n] ")
                 fall_back = answer in ("", "y", "yes")
             if not fall_back:
                 ui.error("aborted - pass --headless to run without a window")

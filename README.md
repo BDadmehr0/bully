@@ -95,6 +95,17 @@ assets decoded:    2
 mounted assets:    4 (1 mounts)
 ```
 
+**If something behaves like old code**, run the environment check - it reports
+the git revision, whether the binary is older than the sources (the cause of
+"unknown option --diagnose" and of crashes in already-fixed code), and whether a
+window is possible:
+
+```sh
+python3 scripts/run_game.py --doctor
+```
+
+`run_game.py` also detects a stale binary itself and offers to rebuild.
+
 **If no window appears:** run `bully_game --diagnose` (or
 `python3 scripts/run_game.py --diagnose`). It prints the SDL video driver, the
 display environment and whether a window is possible. The usual causes are
