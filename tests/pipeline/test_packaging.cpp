@@ -2,6 +2,8 @@
 #include <string>
 
 #include "bully/formats/package.h"
+#include <filesystem>
+
 #include "bully/pipeline/packager.h"
 #include "fixture.h"
 #include "test_support.h"
@@ -101,20 +103,24 @@ TEST_CASE("Packaging warns about stale and missing outputs", "[pipeline][package
     CHECK(excluded.entry_count == 0);
 }
 
-TEST_CASE("Packaging an empty project produces a valid empty package", "[pipeline][package]")
+TEST_CASE("Packaging a project with no compiled assets fails loudly", "[pipeline][package]")
 {
+    // Silently writing an empty archive is how a mis-wired CI step uploads a
+    // game with no content. An empty package is an error now.
     test::ProjectFixture fixture("empty-project");
     Packager packager(fixture.layout(), fixture.registry());
     PackageOptions options;
     const auto result = packager.build_package(options);
-    CHECK(result.success);
+    CHECK_FALSE(result.success);
     CHECK(result.entry_count == 0);
-    auto bytes = core::FileSystem::read_binary(result.package_path);
-    REQUIRE(bytes.has_value());
-    formats::PackageDocument document;
-    auto decoded = document.deserialize(bytes.value());
-    REQUIRE(decoded.has_value());
-    CHECK(decoded.value().entries.empty());
+    CHECK(result.diagnostics.has_errors());
+    bool found_code = false;
+    for (const auto& diagnostic : result.diagnostics.all()) {
+        if (diagnostic.code == "BULLY-PKG-0010") found_code = true;
+    }
+    CHECK(found_code);
+    // And no archive was left behind to be picked up by a later step.
+    CHECK_FALSE(core::FileSystem::exists(result.package_path));
 }
 
 TEST_CASE("Package manifest can be written standalone", "[pipeline][package]")

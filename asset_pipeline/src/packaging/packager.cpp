@@ -32,6 +32,28 @@ std::string utc_now()
     return buffer;
 }
 
+/// Project name declared in project.bullyproj, slugified for use in a file name.
+std::string declared_project_name(const ProjectLayout& layout)
+{
+    auto settings = layout.load();
+    if (!settings) return {};
+    std::string slug;
+    for (char c : settings.value().name) {
+        const bool keep = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                          (c >= '0' && c <= '9') || c == '-' || c == '_';
+        slug.push_back(keep ? c : '-');
+    }
+    return slug;
+}
+
+/// Directory name of the project root, or "" when it is not usable as a name.
+std::string directory_name(const std::filesystem::path& root)
+{
+    auto name = root.lexically_normal().filename().string();
+    if (name.empty() || name == "." || name == "..") return {};
+    return name;
+}
+
 bool type_selected(const std::vector<AssetType>& types, AssetType type)
 {
     if (types.empty()) return true;
@@ -49,8 +71,15 @@ PackageResult Packager::build_package(const PackageOptions& options) const
 {
     PackageResult result;
     formats::PackageDocument package;
-    package.name = options.package_name.empty() ? layout_.root().filename().string()
-                                                : options.package_name;
+    // A nameless package is rejected by PackageDocument::validate(), and
+    // root().filename() is "." when the CLI is invoked as `--project .`, which
+    // produced archives literally named "..bpackage". Fall back through the
+    // declared project name and then a constant, never to "." or "".
+    std::string name = options.package_name;
+    if (name.empty()) name = declared_project_name(layout_);
+    if (name.empty()) name = directory_name(layout_.root());
+    if (name.empty()) name = "game";
+    package.name = name;
     package.asset_id = core::Uuid::from_name(package.name + "|" + options.target_platform,
                                              "bully.package")
                            .to_string();
@@ -100,6 +129,18 @@ PackageResult Packager::build_package(const PackageOptions& options) const
     std::sort(items.begin(), items.end(), [](const Item& a, const Item& b) {
         return a.logical_path < b.logical_path;
     });
+    if (items.empty()) {
+        // Packaging nothing "succeeds" but ships a game with no content. Treat
+        // it as an error so a mis-wired CI step fails loudly instead of
+        // uploading an empty archive nobody opens.
+        result.diagnostics.error(
+            "BULLY-PKG-0010",
+            "no compiled assets to package in '" + layout_.root().string() +
+                "'; run 'build' first (and check the project root)",
+            "packages");
+        result.success = false;
+        return result;
+    }
 
     formats::PackageManifest manifest;
     manifest.package_name = package.name;

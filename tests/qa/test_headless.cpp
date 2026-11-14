@@ -139,6 +139,45 @@ TEST_CASE("CLI verifies corrupted assets as invalid", "[headless]")
     CHECK(verified.output.find("INVALID") != std::string::npos);
 }
 
+TEST_CASE("CLI packaging run from the project root names files sensibly", "[headless]")
+{
+    // Regression: `bully_asset_cli package` executed *inside* a project (the
+    // documented workflow) used to produce "packages/..bpackage" because the
+    // project name defaulted to the directory name of the current directory,
+    // which is ".". It also silently packaged zero assets.
+    test::TempDir dir;
+    const auto project = dir / "named-project";
+    REQUIRE(run("new \"" + project.string() + "\" --name \"Bully Demo\"", dir.path()).exit_code == 0);
+
+    // Packaging before building must fail, not write an empty archive.
+    const auto premature = run("package", project);
+    INFO(premature.output);
+    CHECK(premature.exit_code == 1);
+    CHECK(premature.output.find("BULLY-PKG-0010") != std::string::npos);
+    for (const auto& entry : std::filesystem::directory_iterator(project / "packages")) {
+        CHECK(entry.path().extension() != ".bpackage");
+    }
+
+    REQUIRE(run("build", project).exit_code == 0);
+    const auto packaged = run("package", project);
+    INFO(packaged.output);
+    CHECK(packaged.exit_code == 0);
+    CHECK(packaged.output.find("Packaged 0 assets") == std::string::npos);
+
+    // The template ships a .gitkeep placeholder in packages/; only the real
+    // artefacts are subject to the naming rule.
+    for (const auto& entry : std::filesystem::directory_iterator(project / "packages")) {
+        const auto name = entry.path().filename().string();
+        if (name == ".gitkeep") continue;
+        INFO(name);
+        CHECK(name.rfind("..", 0) != 0);
+        CHECK(name.find('.') != 0);
+    }
+    CHECK(std::filesystem::file_size(project / "packages/Bully-Demo.bpackage") > 0);
+    // Reported paths are project-relative, never "./packages".
+    CHECK(packaged.output.find("./") == std::string::npos);
+}
+
 TEST_CASE("CLI exports compiled assets back to editable source files", "[headless]")
 {
     test::TempDir dir;

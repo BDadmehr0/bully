@@ -155,6 +155,13 @@ bool open_project(const std::string& project_dir, Session& session, bool require
     return true;
 }
 
+/// Project-relative display path, so `--project .` never prints "./reports/...".
+std::string display_path(const bully::pipeline::ProjectLayout& layout, const std::string& path)
+{
+    if (path.empty()) return path;
+    return bully::core::FileSystem::relative_to(path, layout.root());
+}
+
 int command_new(const Arguments& arguments)
 {
     if (arguments.positional.empty()) {
@@ -287,7 +294,10 @@ int command_build(const Arguments& arguments)
     std::cout << "Build " << (report.success() ? "succeeded" : "FAILED") << ": " << report.built
               << " built, " << report.cached << " cached, " << report.failed << " failed ("
               << report.duration_ms << " ms)\n";
-    std::cout << "Report: " << (session.layout->reports_dir() / "build-report.md").string() << "\n";
+    std::cout << "Report: "
+              << display_path(*session.layout,
+                              (session.layout->reports_dir() / "build-report.md").string())
+              << "\n";
     return report.success() ? 0 : 1;
 }
 
@@ -549,8 +559,36 @@ int command_qa(const Arguments& arguments)
     (void)bully::core::FileSystem::write_text(session.layout->reports_dir() / "qa-report.md",
                                               report.to_markdown());
     std::cout << "\nReport written to "
-              << (session.layout->reports_dir() / "qa-report.md").string() << "\n";
+              << display_path(*session.layout,
+                              (session.layout->reports_dir() / "qa-report.md").string())
+              << "\n";
     return report.success() ? 0 : 1;
+}
+
+/// Best-effort project name for artefacts (package file name, manifest).
+///
+/// The directory name is a poor default: projects are routinely run as
+/// `bully_asset_cli package --project .`, where `root().filename()` is "." and
+/// the package ends up named `..bpackage`. Prefer the manifest's declared name,
+/// fall back to a directory name that is not "." or "..", and only then to a
+/// constant.
+std::string default_project_name(const bully::pipeline::ProjectLayout& layout)
+{
+    if (auto settings = layout.load()) {
+        const auto& name = settings.value().name;
+        if (!name.empty()) {
+            std::string slug;
+            for (char c : name) {
+                const bool ok = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                                (c >= '0' && c <= '9') || c == '-' || c == '_';
+                slug.push_back(ok ? c : '-');
+            }
+            if (!slug.empty()) return slug;
+        }
+    }
+    auto directory = layout.root().lexically_normal().filename().string();
+    if (directory.empty() || directory == "." || directory == "..") return "game";
+    return directory;
 }
 
 int command_package(const Arguments& arguments)
@@ -559,14 +597,16 @@ int command_package(const Arguments& arguments)
     if (!open_project(arguments.option("project", "."), session)) return 1;
     bully::pipeline::Packager packager(*session.layout, *session.registry);
     bully::pipeline::PackageOptions options;
-    options.package_name = arguments.option("name", session.layout->root().filename().string());
+    const auto fallback_name = default_project_name(*session.layout);
+    options.package_name = arguments.option("name", fallback_name);
     options.output_name = arguments.option("output", options.package_name);
     auto result = packager.build_package(options);
     for (const auto& item : result.diagnostics.all()) std::cerr << item.format() << "\n";
     if (!result.success) return 1;
     std::cout << "Packaged " << result.entry_count << " assets (" << result.total_bytes
-              << " bytes)\n  package: " << result.package_path << "\n  manifest: "
-              << result.manifest_path << "\n";
+              << " bytes)\n  package: " << display_path(*session.layout, result.package_path)
+              << "\n  manifest: " << display_path(*session.layout, result.manifest_path)
+              << "\n";
     return 0;
 }
 

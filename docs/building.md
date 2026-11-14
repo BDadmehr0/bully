@@ -50,10 +50,26 @@ shell and the *windowed* game host are skipped, and everything else - including
 
 ```sh
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
-      -DBULLY_BUILD_STUDIO=OFF -DBULLY_BUILD_RUNTIME=OFF
+      -DBULLY_BUILD_STUDIO=OFF
 cmake --build build -j"$(nproc)"
 ctest --test-dir build --output-on-failure
 ```
+
+Running the tests: use `ctest --preset <name>` from the repository root, or
+`ctest --test-dir build/headless`. A bare `ctest` run in the *source* directory
+finds no tests - the tree writes a `CTestTestfile.cmake` there that turns that
+mistake into a hard error instead of a green "no tests were found".
+
+### Where the binaries land
+
+| Preset | CLI | Game host | Tests |
+|---|---|---|---|
+| `headless` | `build/headless/apps/asset_cli/bully_asset_cli` | `build/headless/apps/game/bully_game` (headless) | `build/headless/tests/` |
+| `debug` | `build/apps/asset_cli/bully_asset_cli` | `build/apps/game/bully_game` | `build/tests/` |
+| `release` | `build/release/apps/...` | `build/release/apps/game/...` | `build/release/tests/` |
+
+Note the `debug` and `release` presets share `build/` while `headless` uses
+`build/headless/`; `make` uses `build/` by default.
 
 ## Full build
 

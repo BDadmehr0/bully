@@ -15,3 +15,7 @@ project.db-shm
 **/packages/*.manifest.json
 **/reports/
 exported/
+
+# ctest emits this when run outside the build tree
+Testing/
+CTestTestfile.cmake

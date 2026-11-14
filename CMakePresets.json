@@ -1,6 +1,10 @@
 {
   "version": 6,
-  "cmakeMinimumRequired": { "major": 3, "minor": 21, "patch": 0 },
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
   "configurePresets": [
     {
       "name": "base",
@@ -31,7 +35,7 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "BULLY_BUILD_STUDIO": "OFF",
-        "BULLY_BUILD_RUNTIME": "OFF",
+        "BULLY_BUILD_RUNTIME": "ON",
         "BULLY_BUILD_TESTS": "ON",
         "BULLY_BUILD_CLI": "ON",
         "BULLY_WARNINGS_AS_ERRORS": "ON"
@@ -54,37 +58,60 @@
       "displayName": "Debug with ASan/UBSan",
       "inherits": "headless",
       "cacheVariables": {
-        "BULLY_ENABLE_SANITIZERS": "ON"
+        "BULLY_ENABLE_SANITIZERS": "ON",
+        "BULLY_BUILD_RUNTIME": "ON"
       }
     }
   ],
   "buildPresets": [
-    { "name": "debug", "configurePreset": "debug" },
-    { "name": "headless", "configurePreset": "headless" },
-    { "name": "release", "configurePreset": "release" },
-    { "name": "asan", "configurePreset": "asan" }
+    {
+      "name": "debug",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "headless",
+      "configurePreset": "headless"
+    },
+    {
+      "name": "release",
+      "configurePreset": "release"
+    },
+    {
+      "name": "asan",
+      "configurePreset": "asan"
+    }
   ],
   "testPresets": [
     {
       "name": "debug",
       "configurePreset": "debug",
-      "output": { "outputOnFailure": true }
+      "output": {
+        "outputOnFailure": true
+      }
     },
     {
       "name": "headless",
       "configurePreset": "headless",
-      "output": { "outputOnFailure": true }
+      "output": {
+        "outputOnFailure": true
+      }
     },
     {
       "name": "release",
       "configurePreset": "release",
-      "output": { "outputOnFailure": true }
+      "output": {
+        "outputOnFailure": true
+      }
     },
     {
       "name": "asan",
       "configurePreset": "asan",
-      "output": { "outputOnFailure": true },
-      "environment": { "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1" }
+      "output": {
+        "outputOnFailure": true
+      },
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1"
+      }
     }
   ]
 }
